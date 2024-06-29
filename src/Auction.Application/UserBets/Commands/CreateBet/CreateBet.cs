@@ -1,7 +1,10 @@
 ﻿using Auction.Application.Common;
+using Auction.Application.Common.Abstractions.Repository;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Utils;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Configuration.UserSecrets;
+using System.Security.Principal;
 
 namespace Auction.Application.UserBets.Commands.CreateBet;
 
@@ -28,16 +31,25 @@ public class CreateBetCommandHandler : IRequestHandler<CreateBetCommand, Guid>
         var currentUserId = _userProvider.GetCurrentUserId();
         using var connection = _unitOfWork.Create();
 
+        var userRepository = connection.Repositories.UserRepository;
+        var userBetRepository = connection.Repositories.UserBetRepository;
+        var accountRepository = connection.Repositories.AccountRepository;
+        var lotRepository = connection.Repositories.LotRepository;
+
         Guid result = Guid.Empty;
-        var lot = await connection.Repositories.LotRepository.GetById(command.LotId);
-        if (lot is not null && lot.Archived)
+        var lot = await lotRepository.GetById(command.LotId);
+        var user = await userRepository.GetById(currentUserId);
+        var account = await accountRepository.GetById(user.AccountId);
+
+        if (lot is not null && (lot.Archived || lot.StartPrice > account.Ammount) && lot.TradingStartDate <= DateTime.Now)
         {
             return result;
         }
 
-        var bets = await connection.Repositories.UserBetRepository.GetBy(nameof(UserBet.LotId), command.LotId);
+        var bets = await userBetRepository.GetBy(nameof(UserBet.LotId), command.LotId);
+        var lastBet = bets.OrderBy(x => x.Ammount).LastOrDefault();
 
-        if (!bets.Any() || !bets.Any(x => x.Ammount >= command.Amount))
+        if (lastBet is not null && account.Ammount > lastBet.Ammount)
         {
             var bet = new UserBet
             {
@@ -46,7 +58,14 @@ public class CreateBetCommandHandler : IRequestHandler<CreateBetCommand, Guid>
                 Ammount = command.Amount,
             };
 
-            result = await connection.Repositories.UserBetRepository.Create(bet);
+            var prevUser = await userRepository.GetById(lastBet.UserId);
+            var prevAccount = await accountRepository.GetById(prevUser.AccountId);
+            prevAccount.Ammount += lastBet.Ammount;
+            await accountRepository.Update(prevAccount);
+
+            result = await userBetRepository.Create(bet);
+            account.Ammount -= bet.Ammount;
+            await accountRepository.Update(account);
 
             connection.SaveChanges();
         }
