@@ -16,6 +16,9 @@ public class LotMapping : IMapping<Lot>
             { nameof(Lot.StartPrice), "start_price" },
             { nameof(Lot.TradingStartDate), "trading_start_date" },
             { nameof(Lot.TradingEndDate), "trading_end_date" },
+            { nameof(Lot.Archived), "archived" },
+            { nameof(Lot.OwnerId), "owner_id" },
+            { nameof(Lot.PublisherId), "publisher_id" },
         };
     }
 }

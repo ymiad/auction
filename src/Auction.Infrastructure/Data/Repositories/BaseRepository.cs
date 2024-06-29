@@ -120,6 +120,41 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
 
     protected abstract TEntity Read(NpgsqlDataReader reader);
 
+    public virtual async Task<IList<TEntity>> GetBy(string fieldName, object value)
+    {
+        var selectCommand = _connection.CreateCommand();
+        selectCommand.Transaction = _transaction;
+        var mapping = Mapper.GetMap<TEntity>();
+
+        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
+
+        mapping.Remove(EntityConstants.TableName);
+
+        var keysArr = mapping.Keys.ToArray();
+        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
+
+        var tableFieldsStr = string.Join(", ", fieldsArr);
+
+        string queryFieldName = Mapper.GetTableFieldName(mapping, fieldName);
+
+        var query = $"{GetAllQuery()} WHERE {queryFieldName} = @{queryFieldName}";
+
+        selectCommand.CommandText = query;
+
+        selectCommand.Parameters.AddWithValue($"@{queryFieldName}", value);
+
+        using var reader = await selectCommand.ExecuteReaderAsync();
+
+        List<TEntity> result = [];
+
+        while (reader.Read())
+        {
+            result.Add(Read(reader));
+        }
+
+        return result;
+    }
+
     public virtual async Task<Guid> Create(TEntity entity)
     {
         var insertCommand = _connection.CreateCommand();

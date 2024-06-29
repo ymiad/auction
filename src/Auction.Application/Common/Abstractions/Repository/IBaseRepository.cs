@@ -8,4 +8,5 @@ public interface IBaseRepository<T> where T : BaseEntity
     Task<Guid> Create(T entity);
     Task Update(T entity);
     Task<T> GetById(Guid id);
+    Task<IList<T>> GetBy(string fieldName, object value);
 }

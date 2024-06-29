@@ -48,7 +48,7 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
         }
         catch // TODO: catch exact exception
         {
-            throw new UnauthorizedAccessException();
+            throw;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
-using Auction.Domain.Entities;
-using Microsoft.AspNetCore.Http;
+using Auction.Application.Utils;
 
 namespace Auction.Application.Accounts.Commands.Refill;
 
@@ -14,17 +13,17 @@ public record RefillCommand : IRequest
 public class RefillCommandHandler : IRequestHandler<RefillCommand>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IHttpContextAccessor _contextAccessor;
+    private readonly UserProvider _userProvider;
 
-    public RefillCommandHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
+    public RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider)
     {
         _unitOfWork = unitOfWork;
-        _contextAccessor = httpContextAccessor;
+        _userProvider = userProvider;
     }
 
     public async Task Handle(RefillCommand command, CancellationToken cancellationToken)
     {
-        var userId = ((User)_contextAccessor.HttpContext.Items["User"]).Id;
+        var userId = _userProvider.GetCurrentUserId();
 
         using (var connection = _unitOfWork.Create())
         {

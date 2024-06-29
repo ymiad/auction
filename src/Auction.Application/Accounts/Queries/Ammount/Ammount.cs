@@ -1,7 +1,6 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
-using Auction.Domain.Entities;
-using Microsoft.AspNetCore.Http;
+using Auction.Application.Utils;
 
 namespace Auction.Application.Accounts.Queries.Ammount;
 
@@ -11,17 +10,17 @@ public record AmmountQuery : IRequest<decimal>;
 public class AmmountQueryHandler : IRequestHandler<AmmountQuery, decimal>
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly UserProvider _userProvider;
 
-    public AmmountQueryHandler(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor)
+    public AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider)
     {
         _unitOfWork = unitOfWork;
-        _httpContextAccessor = httpContextAccessor;
+        _userProvider = userProvider;
     }
 
     public async Task<decimal> Handle(AmmountQuery request, CancellationToken cancellationToken)
     {
-        var userId = ((User)_httpContextAccessor.HttpContext.Items["User"]).Id;
+        var userId = _userProvider.GetCurrentUserId();
 
         decimal amount = 0;
 

@@ -15,18 +15,18 @@ public class AddAccountsTable : Migration
             .AddColumn("account_id")
             .AsGuid();
 
-        //Create
-        //    .ForeignKey("FK_users_accounts")
-        //    .FromTable("users")
-        //    .ForeignColumn("account_id")
-        //    .ToTable("accounts")
-        //    .PrimaryColumn("id")
-        //    .OnDelete(System.Data.Rule.Cascade);
+        Create
+            .ForeignKey("FK_users_accounts")
+            .FromTable("users")
+            .ForeignColumn("account_id")
+            .ToTable("accounts")
+            .PrimaryColumn("id")
+            .OnDelete(System.Data.Rule.Cascade);
     }
 
     public override void Down() {
-        //Delete
-        //    .ForeignKey("FK_users_accounts");
+        Delete
+            .ForeignKey("FK_users_accounts");
 
         Delete.Column("account_id")
             .FromTable("users");

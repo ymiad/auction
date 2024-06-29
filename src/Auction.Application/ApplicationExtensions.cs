@@ -1,4 +1,5 @@
 ﻿using Auction.Application.Common.Behaviours;
+using Auction.Application.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -16,6 +17,8 @@ namespace Auction.Application
             });
 
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            services.AddScoped<UserProvider>();
 
             return services;
         }

@@ -1,8 +1,11 @@
-﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+﻿using Auction.Application.Common;
+using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Utils;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Lots.Commands.CreateLot;
 
+[Authorize]
 public record CreateLotCommand : IRequest<Guid>
 {
     public required string Name { get; init; }
@@ -15,13 +18,17 @@ public record CreateLotCommand : IRequest<Guid>
 public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
-    public CreateLotCommandHandler(IUnitOfWork unitOfWork)
+    private readonly UserProvider _userProvider;
+
+    public CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider)
     {
         _unitOfWork = unitOfWork;
+        _userProvider = userProvider;
     }
 
     public async Task<Guid> Handle(CreateLotCommand request, CancellationToken cancellationToken)
     {
+        var currentUserId = _userProvider.GetCurrentUserId();
         var entity = new Lot
         {
             Name = request.Name,
@@ -29,14 +36,16 @@ public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
             StartPrice = request.StartPrice,
             TradingStartDate = request.StartDate,
             TradingEndDate = request.EndDate,
+            PublisherId = currentUserId,
+            OwnerId = currentUserId,
         };
 
         using var connection = _unitOfWork.Create();
 
-        await connection.Repositories.LotRepository.Create(entity);
+        var lotId = await connection.Repositories.LotRepository.Create(entity);
 
         connection.SaveChanges();
 
-        return Guid.NewGuid();
+        return lotId;
     }
 }
