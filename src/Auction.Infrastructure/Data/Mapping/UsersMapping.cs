@@ -13,6 +13,7 @@ public class UsersMapping : IMapping<User>
             { nameof(User.Id), "id" },
             { nameof(User.Username), "username" },
             { nameof(User.Password), "password" },
+            { nameof(User.AccountId), "account_id" }
         };
     }
 }

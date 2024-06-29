@@ -1,6 +1,6 @@
 ﻿namespace Auction.Domain.Entities;
 
-internal class Account
+public class Account : BaseEntity
 {
-
+    public decimal Ammount { get; set; }
 }

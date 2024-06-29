@@ -6,4 +6,5 @@ public interface IUnitOfWorkRepository
 {
     ILotRepository LotRepository { get; }
     IUserRepository UserRepository { get; }
+    IAccountRepository AccountRepository { get; }
 }

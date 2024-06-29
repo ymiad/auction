@@ -1,19 +1,18 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 
 namespace Auction.Infrastructure.Data.UnitOfWork;
 
 public class UnitOfWorkAdapter : IUnitOfWorkAdapter
 {
-    private readonly SqliteConnection _connection;
-
-    private readonly SqliteTransaction _transaction;
+    private readonly NpgsqlConnection _connection;
+    private readonly NpgsqlTransaction _transaction;
 
     public IUnitOfWorkRepository Repositories { get; set; }
 
     public UnitOfWorkAdapter(string connectionString)
     {
-        _connection = new SqliteConnection(connectionString);
+        _connection = new NpgsqlConnection(connectionString);
         _connection.Open();
 
         _transaction = _connection.BeginTransaction();

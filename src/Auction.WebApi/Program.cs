@@ -52,6 +52,7 @@ app.UseSwaggerUI();
 
 app.LotsFeature();
 app.UsersFeature();
+app.AccountsFeature();
 app.UseAuthentication();
 app.MapEndpoints();
 

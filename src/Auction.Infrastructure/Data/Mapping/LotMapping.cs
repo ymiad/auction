@@ -14,8 +14,8 @@ public class LotMapping : IMapping<Lot>
             { nameof(Lot.Name), "name" },
             { nameof(Lot.Description), "description" },
             { nameof(Lot.StartPrice), "start_price" },
-            { nameof(Lot.TradingStart), "trading_start" },
-            { nameof(Lot.TradingDuration), "trading_duration" },
+            { nameof(Lot.TradingStartDate), "trading_start_date" },
+            { nameof(Lot.TradingEndDate), "trading_end_date" },
         };
     }
 }

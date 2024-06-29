@@ -11,7 +11,7 @@ public static class AuctionRegisterExtension
 {
     public static IServiceCollection AddAuctionExtensions(this IServiceCollection services, IConfiguration configuration)
     {
-        using (var serviceProvider = AddAuctionData())
+        using (var serviceProvider = AddAuctionData(configuration))
         using (var scope = serviceProvider.CreateScope())
         {
             UpdateDatabase(scope.ServiceProvider);
@@ -32,15 +32,17 @@ public static class AuctionRegisterExtension
         return services;
     }
 
-    private static ServiceProvider AddAuctionData()
+    private static ServiceProvider AddAuctionData(IConfiguration configuration)
     {
-        var assembly = Assembly.GetAssembly(typeof(AddLotTable));
+        var assembly = Assembly.GetAssembly(typeof(AddLotsTable));
+
+        var connectionString = configuration.GetConnectionString("DefaultConnectionString");
 
         return new ServiceCollection()
             .AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
-                .AddSQLite()
-                .WithGlobalConnectionString("Data Source=auction.db")
+                .AddPostgres()
+                .WithGlobalConnectionString(connectionString)
                 .ScanIn(assembly))
             .AddLogging(lb => lb.AddFluentMigratorConsole())
             .BuildServiceProvider();

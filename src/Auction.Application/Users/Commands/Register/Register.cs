@@ -5,8 +5,8 @@ namespace Auction.Application.Users.Commands.Register;
 
 public class RegisterCommand : IRequest<Guid>
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public required string Username { get; set; }
+    public required string Password { get; set; }
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
@@ -26,12 +26,22 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             Password = command.Password
         };
 
-        using var connection = _unitOfWork.Create();
+        var account = new Account
+        {
+            Ammount = 0
+        };
 
-        await connection.Repositories.UserRepository.Create(user);
+        Guid resultUserId = Guid.Empty;
 
-        connection.SaveChanges();
+        using (var connection = _unitOfWork.Create())
+        {
+            var accountId = await connection.Repositories.AccountRepository.Create(account);
 
-        return Guid.NewGuid();
+            user.AccountId = accountId;
+            resultUserId = await connection.Repositories.UserRepository.Create(user);
+            connection.SaveChanges();
+        }
+
+        return resultUserId;
     }
 }
