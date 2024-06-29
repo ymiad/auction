@@ -1,7 +1,6 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Scheduling;
-using Auction.Application.Scheduling.Jobs;
 using Auction.Application.Utils;
 using Auction.Domain.Entities;
 using Quartz;

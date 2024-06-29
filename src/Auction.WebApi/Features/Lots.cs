@@ -1,5 +1,5 @@
-﻿using Auction.Application.Common;
-using Auction.Application.Lots.Commands.CreateLot;
+﻿using Auction.Application.Lots.Commands.CreateLot;
+using Auction.Application.Lots.Commands.DeleteLot;
 using Auction.Application.Lots.Queries.GetLots;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -42,6 +42,16 @@ public static class Lots
             .WithSummary("Get current available lots")
             .WithOpenApi()
             .Produces<List<CurrentLotDto>>();
+
+        group.MapDelete(
+            "/{id:guid}",
+            async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
+            (await mediator.Send(new DeleteLotCommand(id), cancellationToken))
+            )
+            .WithTags(nameof(Lots))
+            .WithSummary("Delete lot")
+            .WithOpenApi()
+            .Produces<bool>();
 
         return builder;
     }

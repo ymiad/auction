@@ -20,6 +20,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             Username = reader.GetString(mapping[nameof(User.Username)]),
             Password = reader.GetString(mapping[nameof(User.Password)]),
             AccountId = reader.GetGuid(mapping[nameof(User.AccountId)]),
+            Role = (Roles)reader.GetInt32(mapping[nameof(User.Role)]),
         };
 
         return result;

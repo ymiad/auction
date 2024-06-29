@@ -1,10 +1,7 @@
 ﻿using Auction.Application.Common;
-using Auction.Application.Common.Abstractions.Repository;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Utils;
 using Auction.Domain.Entities;
-using Microsoft.Extensions.Configuration.UserSecrets;
-using System.Security.Principal;
 
 namespace Auction.Application.UserBets.Commands.CreateBet;
 

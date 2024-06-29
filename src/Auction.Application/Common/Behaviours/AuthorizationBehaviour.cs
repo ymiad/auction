@@ -1,6 +1,8 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Exceptions;
 using Auction.Application.Common.Security;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 
@@ -35,16 +37,29 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
         try
         {
             var secret = "secret_secret_secret_secret_secret_secret_secret_secret";
-            JwtSecurityToken? jwtToken = TokenValidator.ValidateToken(authHeader.ToString(), secret) ?? throw new UnauthorizedAccessException();
-            var userId = new Guid(jwtToken.Claims.First(x => x.Type == "id").Value);
-
-            using (var connection = _unitOfWork.Create())
+            var tokenValidationResult = await TokenValidator.ValidateToken(authHeader.ToString(), secret) ?? throw new UnauthorizedAccessException();
+            if (tokenValidationResult.IsValid)
             {
-                var user = await connection.Repositories.UserRepository.GetById(userId);
-                httpContext.Items["User"] = user;
+                Guid userId = new Guid(tokenValidationResult.Claims["user_id"]?.ToString() ?? string.Empty);
+                //var roleStr = tokenValidationResult.Claims.First(x => x.Type == "user_role").Value;
+                var roleStr = tokenValidationResult.Claims["user_role"]?.ToString();
+                var parseRoleResult = int.TryParse(roleStr, out int role);
+
+                if (!parseRoleResult || role < (int)attr.Role)
+                {
+                    throw new ForbiddenAccessException();
+                }
+                using (var connection = _unitOfWork.Create())
+                {
+                    var user = await connection.Repositories.UserRepository.GetById(userId);
+                    httpContext.Items["user_id"] = user.Id;
+                    httpContext.Items["user_role"] = (int)user.Role;
+                }
+
+                return await next();
             }
 
-            return await next();
+            throw new ForbiddenAccessException();
         }
         catch // TODO: catch exact exception
         {

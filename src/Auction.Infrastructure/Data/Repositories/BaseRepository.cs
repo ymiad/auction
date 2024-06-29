@@ -191,6 +191,23 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         return entityId;
     }
 
+    public virtual async Task Delete(Guid id)
+    {
+        var deleteCommand = _connection.CreateCommand();
+        deleteCommand.Transaction = _transaction;
+        var mapper = Mapper.GetMapper<TEntity>();
+        var tableName = mapper.GetTableName();
+        var idFieldName = mapper.GetTableFieldName(nameof(BaseEntity.Id));
+
+        var query = $"DELETE FROM {tableName} WHERE {idFieldName} = @{idFieldName}";
+
+        deleteCommand.CommandText = query;
+
+        deleteCommand.Parameters.AddWithValue($"@{idFieldName}", id);
+
+        await deleteCommand.ExecuteNonQueryAsync();
+    }
+
     public virtual async Task Update(TEntity entity)
     {
         var updateCommand = _connection.CreateCommand();

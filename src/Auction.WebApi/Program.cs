@@ -55,6 +55,6 @@ app.UsersFeature();
 app.AccountsFeature();
 app.UserBetsFeature();
 app.UseAuthentication();
-app.MapEndpoints();
+//app.MapEndpoints();
 
 app.Run();

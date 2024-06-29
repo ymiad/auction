@@ -19,6 +19,16 @@ namespace Auction.Infrastructure.Data.Utils
             return dict;
         }
 
+        public static IMapping<TEntity> GetMapper<TEntity>() where TEntity : BaseEntity
+        {
+            var assemblyTypes = Assembly.GetExecutingAssembly().GetTypes();
+            var interfaceType = typeof(IMapping<TEntity>);
+            var mappingType = assemblyTypes.FirstOrDefault(t => t.IsAssignableTo(interfaceType));
+            var mapper = Activator.CreateInstance(mappingType);
+
+            return mapper as IMapping<TEntity>;
+        }
+
         public static string GetTableName<TEntity>(this IMapping<TEntity> mapping) where TEntity : BaseEntity
         {
             return mapping.GetMapping()[EntityConstants.TableName];

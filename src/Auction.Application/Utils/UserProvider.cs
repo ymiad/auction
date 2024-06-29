@@ -15,13 +15,9 @@ namespace Auction.Application.Utils
         public Guid GetCurrentUserId()
         {
             Guid result = Guid.Empty;
-            object? user = null;
-            var isSuccess = _httpContextAccessor?.HttpContext?.Items.TryGetValue("User", out user) ?? false;
-            var currentUser = isSuccess && user is not null ? user as User : null;
-            if (currentUser is not null)
-            {
-                result = currentUser.Id;
-            }
+            object? userId = null;
+            var isSuccess = _httpContextAccessor?.HttpContext?.Items.TryGetValue("user_id", out userId) ?? false;
+            var currentUserId = isSuccess && userId is not null ? (Guid)userId : Guid.Empty;
 
             return result;
         }

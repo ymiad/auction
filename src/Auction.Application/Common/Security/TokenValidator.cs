@@ -1,12 +1,12 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+﻿using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 namespace Auction.Application.Common.Security;
 
 public static class TokenValidator
 {
-    public static JwtSecurityToken? ValidateToken(string authHeader, string secret)
+    public async static Task<TokenValidationResult?> ValidateToken(string authHeader, string secret)
     {
         if (string.IsNullOrEmpty(authHeader))
         {
@@ -21,19 +21,17 @@ public static class TokenValidator
 
         var token = splitted[1];
 
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new JsonWebTokenHandler();
         var key = Encoding.UTF8.GetBytes(secret);
-        tokenHandler.ValidateToken(token, new TokenValidationParameters
+        var tokenValidationResult = await tokenHandler.ValidateTokenAsync(token, new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = false,
             ValidateAudience = false,
             ClockSkew = TimeSpan.Zero
-        }, out SecurityToken validatedToken);
+        });
 
-        var jwtToken = (JwtSecurityToken)validatedToken;
-
-        return jwtToken;
+        return tokenValidationResult;
     }
 }

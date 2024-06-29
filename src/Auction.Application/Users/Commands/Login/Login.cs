@@ -1,4 +1,6 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Domain.Entities;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -28,25 +30,40 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
 
         var user = await connection.Repositories.UserRepository.GetByCredentials(command.Username, command.Password);
 
-        var token = GenerateJwtToken(user.Id);
+        if (user is null)
+        {
+            return string.Empty;
+        }
+
+        var token = GenerateJwtToken(user.Id, user.Role);
 
         return token;
     }
 
-    public string GenerateJwtToken(Guid userId)
+    public string GenerateJwtToken(Guid userId, Roles role)
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenHandler = new JsonWebTokenHandler();
         var key = Encoding.UTF8.GetBytes("secret_secret_secret_secret_secret_secret_secret_secret");
+
+
+        List<Claim> claims =
+        [
+            new Claim("user_id", userId.ToString()),
+            new Claim("user_role", ((int)role).ToString()),
+        ];
+
+        //ClaimsIdentity cl = new ClaimsIdentity()
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity([new Claim("id", userId.ToString())]),
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddDays(7),
+            //Expires = new TimeSpan(DateTime.Now.AddDays(90).Ticks - DateTime.Now.Ticks).TotalSeconds,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
 
-        return tokenHandler.WriteToken(token);
+        return token;
     }
 }

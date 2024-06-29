@@ -6,7 +6,7 @@ public class User : BaseEntity
 
     public required string Password { get; set; }
 
-    public Guid RoleId { get; set; }
+    public Roles Role { get; set; }
 
     public Guid AccountId { get; set; }
 }

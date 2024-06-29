@@ -4,9 +4,9 @@ namespace Auction.WebApi.Infrastructure;
 
 public static class WebAppExtensions
 {
-    public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase endpointGroup)
+    public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group)
     {
-        var groupName = endpointGroup.GetType().Name;
+        var groupName = group.GetType().Name;
 
         return app
             .MapGroup($"/api/{groupName}")

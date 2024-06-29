@@ -3,7 +3,7 @@ using Auction.Infrastructure.Data.Constants;
 
 namespace Auction.Infrastructure.Data.Mapping;
 
-public class UsersMapping : IMapping<User>
+public class UserMapping : IMapping<User>
 {
     public Dictionary<string, string> GetMapping()
     {
@@ -13,7 +13,8 @@ public class UsersMapping : IMapping<User>
             { nameof(User.Id), "id" },
             { nameof(User.Username), "username" },
             { nameof(User.Password), "password" },
-            { nameof(User.AccountId), "account_id" }
+            { nameof(User.AccountId), "account_id" },
+            { nameof(User.Role), "role" },
         };
     }
 }
