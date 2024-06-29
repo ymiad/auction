@@ -1,7 +1,10 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Scheduling;
+using Auction.Application.Scheduling.Jobs;
 using Auction.Application.Utils;
 using Auction.Domain.Entities;
+using Quartz;
 
 namespace Auction.Application.Lots.Commands.CreateLot;
 
@@ -18,12 +21,14 @@ public record CreateLotCommand : IRequest<Guid>
 public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IScheduler _scheduler;
     private readonly UserProvider _userProvider;
 
-    public CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider)
+    public CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider, IScheduler scheduler)
     {
         _unitOfWork = unitOfWork;
         _userProvider = userProvider;
+        _scheduler = scheduler;
     }
 
     public async Task<Guid> Handle(CreateLotCommand request, CancellationToken cancellationToken)
@@ -45,6 +50,8 @@ public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
         var lotId = await connection.Repositories.LotRepository.Create(entity);
 
         connection.SaveChanges();
+
+        await _scheduler.ActivateTradingEndJob(lotId, request.EndDate);
 
         return lotId;
     }

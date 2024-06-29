@@ -11,22 +11,23 @@ public static class AuctionRegisterExtension
 {
     public static IServiceCollection AddAuctionExtensions(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString("DefaultConnectionString");
+
         using (var serviceProvider = AddAuctionData(configuration))
         using (var scope = serviceProvider.CreateScope())
         {
             UpdateDatabase(scope.ServiceProvider);
         }
 
-        services.AddApplicationServices();
+        services.AddApplicationServices(connectionString);
 
-        services.AddUnitOfWork(configuration);
+        services.AddUnitOfWork(connectionString);
 
         return services;
     }
 
-    private static IServiceCollection AddUnitOfWork(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddUnitOfWork(this IServiceCollection services, string connectionString)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnectionString");
         services.AddTransient<IUnitOfWork, UnitOfWork>(s => new UnitOfWork(connectionString));
 
         return services;

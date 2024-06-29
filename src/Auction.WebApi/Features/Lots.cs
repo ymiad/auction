@@ -23,8 +23,7 @@ public static class Lots
             .WithOpenApi()
             .Produces<Guid>();
         
-        group
-            .MapGet(
+        group.MapGet(
             "/getAll",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new GetLotsQuery(), cancellationToken))
@@ -33,6 +32,16 @@ public static class Lots
             .WithSummary("Get all lots")
             .WithOpenApi()
             .Produces<List<LotDto>>();
+
+        group.MapGet(
+            "/getCurrentLots",
+            async (IMediator mediator, CancellationToken cancellationToken) =>
+            (await mediator.Send(new GetCurrentLotsQuery(), cancellationToken))
+            )
+            .WithTags(nameof(Lots))
+            .WithSummary("Get current available lots")
+            .WithOpenApi()
+            .Produces<List<CurrentLotDto>>();
 
         return builder;
     }
