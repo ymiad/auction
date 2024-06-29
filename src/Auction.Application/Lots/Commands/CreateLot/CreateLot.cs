@@ -7,7 +7,7 @@ using Quartz;
 
 namespace Auction.Application.Lots.Commands.CreateLot;
 
-[Authorize]
+[Authorize(Role.User)]
 public record CreateLotCommand : IRequest<Guid>
 {
     public required string Name { get; init; }

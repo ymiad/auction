@@ -17,40 +17,6 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         _transaction = transaction;
     }
 
-    //public virtual IEnumerable<TEntity> Get()
-    //{
-    //    using (var connection = new SqliteConnection("" + new SqliteConnectionStringBuilder
-    //    {
-    //        DataSource = "auction.db"
-    //    }))
-    //    {
-    //        connection.Open();
-
-    //        using (var transaction = connection.BeginTransaction())
-    //        {
-    //            var insertCommand = connection.CreateCommand();
-    //            insertCommand.Transaction = transaction;
-    //            insertCommand.CommandText = "INSERT INTO message ( text ) VALUES ( $text )";
-    //            insertCommand.Parameters.AddWithValue("$text", "Hello, World!");
-    //            insertCommand.ExecuteNonQuery();
-
-    //            var selectCommand = connection.CreateCommand();
-    //            selectCommand.Transaction = transaction;
-    //            selectCommand.CommandText = "SELECT text FROM message";
-    //            using (var reader = selectCommand.ExecuteReader())
-    //            {
-    //                while (reader.Read())
-    //                {
-    //                    var message = reader.GetString(0);
-    //                    Console.WriteLine(message);
-    //                }
-    //            }
-
-    //            transaction.Commit();
-    //        }
-    //    }
-    //}
-
     public virtual async Task<TEntity> GetById(Guid id)
     {
         var selectCommand = _connection.CreateCommand();
@@ -67,7 +33,6 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         var tableFieldsStr = string.Join(", ", fieldsArr);
 
         string idFieldName = Mapper.GetTableFieldName(mapping, nameof(BaseEntity.Id));
-
 
         var query = $"{GetAllQuery()} WHERE {idFieldName} = @{idFieldName}";
 
@@ -182,6 +147,11 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
             if (prop != null)
             {
                 var propValue = prop.GetValue(entity, null);
+                if (prop.PropertyType.IsEnum && propValue != null)
+                {
+                    propValue = (int)propValue;
+                }
+
                 insertCommand.Parameters.AddWithValue($"@{field.Value}", field.Key == nameof(BaseEntity.Id) ? entityId : propValue);
             }
         }
@@ -236,6 +206,10 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
             if (prop != null)
             {
                 var propValue = prop.GetValue(entity, null);
+                if (prop.PropertyType.IsEnum && propValue != null)
+                {
+                    propValue = (int)propValue;
+                }
                 updateCommand.Parameters.AddWithValue($"@{field.Value}", propValue);
             }
         }

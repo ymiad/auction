@@ -5,10 +5,10 @@ namespace Auction.Application.Common
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public class AuthorizeAttribute : Attribute
     {
-        public Roles Role { get; } = Roles.User;
+        public Role Role { get; } = Role.User;
 
-        public AuthorizeAttribute(Roles role) => Role = role;
+        public AuthorizeAttribute(Role role) => Role = role;
 
-        public AuthorizeAttribute() => Role = Roles.User;
+        public AuthorizeAttribute() => Role = Role.User;
     }
 }

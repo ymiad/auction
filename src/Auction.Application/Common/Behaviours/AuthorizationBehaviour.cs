@@ -1,8 +1,10 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Exceptions;
 using Auction.Application.Common.Security;
+using Auction.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 
@@ -41,11 +43,10 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
             if (tokenValidationResult.IsValid)
             {
                 Guid userId = new Guid(tokenValidationResult.Claims["user_id"]?.ToString() ?? string.Empty);
-                //var roleStr = tokenValidationResult.Claims.First(x => x.Type == "user_role").Value;
                 var roleStr = tokenValidationResult.Claims["user_role"]?.ToString();
                 var parseRoleResult = int.TryParse(roleStr, out int role);
 
-                if (!parseRoleResult || role < (int)attr.Role)
+                if (!parseRoleResult || !attr.Role.HasFlag((Role)role))
                 {
                     throw new ForbiddenAccessException();
                 }

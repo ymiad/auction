@@ -6,7 +6,7 @@ using Quartz;
 
 namespace Auction.Application.Lots.Commands.DeleteLot;
 
-[Authorize(Roles.Moderator)]
+[Authorize(Role.Moderator | Role.Admin)]
 public record DeleteLotCommand(Guid LotId) : IRequest<bool>;
 
 public class DeleteLotCommandHandler : IRequestHandler<DeleteLotCommand, bool>

@@ -40,7 +40,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
         return token;
     }
 
-    public string GenerateJwtToken(Guid userId, Roles role)
+    public string GenerateJwtToken(Guid userId, Role role)
     {
         var tokenHandler = new JsonWebTokenHandler();
         var key = Encoding.UTF8.GetBytes("secret_secret_secret_secret_secret_secret_secret_secret");

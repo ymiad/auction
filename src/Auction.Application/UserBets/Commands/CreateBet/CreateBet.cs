@@ -5,7 +5,7 @@ using Auction.Domain.Entities;
 
 namespace Auction.Application.UserBets.Commands.CreateBet;
 
-[Authorize]
+[Authorize(Role.User)]
 public record CreateBetCommand : IRequest<Guid>
 {
     public Guid LotId { get; init; }

@@ -15,6 +15,7 @@ public class UserMapping : IMapping<User>
             { nameof(User.Password), "password" },
             { nameof(User.AccountId), "account_id" },
             { nameof(User.Role), "role" },
+            { nameof(User.Banned), "banned" }
         };
     }
 }

@@ -23,7 +23,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         var user = new User
         {
             Username = command.Username,
-            Password = command.Password
+            Password = command.Password,
+            Role = Role.User,
         };
 
         var account = new Account

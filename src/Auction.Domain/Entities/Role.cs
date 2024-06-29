@@ -1,9 +1,9 @@
 ﻿namespace Auction.Domain.Entities
 {
-    public enum Roles
+    public enum Role
     {
         User = 1,
         Moderator = 2,
-        Admin = 3
+        Admin = 4,
     }
 }

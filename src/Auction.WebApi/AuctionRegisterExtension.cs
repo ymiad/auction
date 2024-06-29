@@ -1,8 +1,10 @@
 ﻿using Auction.Application;
 using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Domain.Entities;
 using Auction.Infrastructure.Data.Migrations;
 using Auction.Infrastructure.Data.UnitOfWork;
 using FluentMigrator.Runner;
+using Npgsql;
 using System.Reflection;
 
 namespace Auction.WebApi;
