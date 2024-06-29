@@ -1,7 +1,6 @@
 ﻿using Auction.Domain.Common;
 using Auction.Infrastructure.Data.Mapping;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace Auction.Infrastructure.Data.Utils
 {
@@ -17,6 +16,11 @@ namespace Auction.Infrastructure.Data.Utils
             var dict = mappingType.GetMethods().First().Invoke(mapper, null) as Dictionary<string, string>;
 
             return dict;
+        }
+
+        public static string GetTableFieldName(Dictionary<string, string> mapping, string entityFieldName)
+        {
+            return mapping[entityFieldName];
         }
     }
 }

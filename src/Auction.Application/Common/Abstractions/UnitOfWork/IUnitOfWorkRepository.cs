@@ -5,4 +5,5 @@ namespace Auction.Application.Common.Abstractions.UnitOfWork;
 public interface IUnitOfWorkRepository
 {
     ILotRepository LotRepository { get; }
+    IUserRepository UserRepository { get; }
 }

@@ -1,8 +1,10 @@
-﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+﻿using Auction.Application.Common;
+using Auction.Application.Common.Abstractions.UnitOfWork;
 using AutoMapper;
 
 namespace Auction.Application.Lots.Queries.GetLots;
 
+[Authorize]
 public record GetLotsQuery : IRequest<List<LotDto>>;
 
 public class GetLotsQueryHandler : IRequestHandler<GetLotsQuery, List<LotDto>>

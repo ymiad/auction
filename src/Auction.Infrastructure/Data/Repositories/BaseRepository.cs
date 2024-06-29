@@ -1,5 +1,6 @@
 ﻿using Auction.Application.Common.Abstractions.Repository;
 using Auction.Domain.Common;
+using Auction.Domain.Entities;
 using Auction.Infrastructure.Data.Constants;
 using Auction.Infrastructure.Data.Utils;
 using AutoMapper.Execution;
@@ -51,6 +52,43 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
     //        }
     //    }
     //}
+
+    public virtual async Task<TEntity> GetById(Guid id)
+    {
+        var selectCommand = _connection.CreateCommand();
+        selectCommand.Transaction = _transaction;
+        var mapping = Mapper.GetMap<TEntity>();
+
+        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
+
+        mapping.Remove(EntityConstants.TableName);
+
+        var keysArr = mapping.Keys.ToArray();
+        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
+
+        var tableFieldsStr = string.Join(", ", fieldsArr);
+
+        string idFieldName = Mapper.GetTableFieldName(mapping, nameof(BaseEntity.Id));
+
+
+        var query = $"{GetAllQuery()} WHERE {idFieldName} = ${idFieldName}";
+
+        selectCommand.CommandText = query;
+
+        selectCommand.Parameters.AddWithValue($"${idFieldName}", id);
+
+        using var reader = await selectCommand.ExecuteReaderAsync();
+
+        TEntity result = null;
+
+        while (reader.Read())
+        {
+            result = Read(reader);
+        }
+
+
+        return result;
+    }
 
     public virtual async Task<IList<TEntity>> GetAll()
     {
@@ -115,5 +153,23 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         }
 
         await insertCommand.ExecuteNonQueryAsync();
+    }
+
+    protected string GetAllQuery()
+    {
+        var mapping = Mapper.GetMap<TEntity>();
+
+        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
+
+        mapping.Remove(EntityConstants.TableName);
+
+        var keysArr = mapping.Keys.ToArray();
+        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
+
+        var tableFieldsStr = string.Join(", ", fieldsArr);
+
+        var query = $"SELECT {tableFieldsStr} FROM {tableName}";
+
+        return query;
     }
 }

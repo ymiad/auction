@@ -1,4 +1,5 @@
-﻿using Auction.Application.Lots.Commands.CreateLot;
+﻿using Auction.Application.Common;
+using Auction.Application.Lots.Commands.CreateLot;
 using Auction.Application.Lots.Queries.GetLots;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,8 @@ public static class Lots
 {
     public static WebApplication LotsFeature(this WebApplication builder)
     {
-        var group = builder.MapGroup($"/api/{nameof(Lots)}");
+        var group = builder
+            .MapGroup($"/api/{nameof(Lots)}");            
 
         group.MapPost(
             "/create",
@@ -20,8 +22,9 @@ public static class Lots
             .WithSummary("Create lot")
             .WithOpenApi()
             .Produces<Guid>();
-
-        group.MapGet(
+        
+        group
+            .MapGet(
             "/getAll",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new GetLotsQuery(), cancellationToken))

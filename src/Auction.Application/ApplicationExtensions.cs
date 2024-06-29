@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Auction.Application.Common.Behaviours;
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace Auction.Application
@@ -11,6 +12,7 @@ namespace Auction.Application
             {
                 cfg.Lifetime = ServiceLifetime.Transient;
                 cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehaviour<,>));
             });
 
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
