@@ -1,17 +1,14 @@
 ﻿using Auction.Application.Common.Models;
 using Auction.Application.Common.Security;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Common;
 
-public class UserProvider
+public class UserProvider(IHttpContextAccessor httpContextAccessor, ILogger<UserProvider> logger)
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public UserProvider(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly ILogger<UserProvider> _logger = logger;
 
     public Result<Guid> GetCurrentUserId()
     {
@@ -23,6 +20,7 @@ public class UserProvider
             return Result<Guid>.Success((Guid)userId);
         }
 
+        _logger.LogWarning("{Message}", AuthError.Unauthorized.Description);
         return Result<Guid>.Failure(AuthError.Unauthorized);
     }
 }

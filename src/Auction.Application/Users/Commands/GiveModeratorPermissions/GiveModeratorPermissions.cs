@@ -1,14 +1,19 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Users.Commands.GiveModeratorPermissions;
 
 public record GiveModeratorPermissionsCommand(Guid UserId) : IRequest<Result>;
 
-public class GiveModeratorPermissionsCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<GiveModeratorPermissionsCommand, Result>
+public class GiveModeratorPermissionsCommandHandler(
+    IUnitOfWork unitOfWork,
+    ILogger<GiveModeratorPermissionsCommandHandler> logger)
+        : IRequestHandler<GiveModeratorPermissionsCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<GiveModeratorPermissionsCommandHandler> _logger = logger;
 
     public async Task<Result> Handle(GiveModeratorPermissionsCommand command, CancellationToken cancellationToken)
     {
@@ -18,6 +23,7 @@ public class GiveModeratorPermissionsCommandHandler(IUnitOfWork unitOfWork) : IR
 
         if (user is null)
         {
+            _logger.LogWarning("{Message}", UserError.NotFound.Description);
             return Result.Failure(UserError.NotFound);
         }
 

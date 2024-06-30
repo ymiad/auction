@@ -1,16 +1,19 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Accounts.Queries.Ammount;
 
 [Authorize]
 public record AmmountQuery : IRequest<Result<decimal>>;
 
-public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider) : IRequestHandler<AmmountQuery, Result<decimal>>
+public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider, ILogger<AmmountQueryHandler> logger)
+    : IRequestHandler<AmmountQuery, Result<decimal>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly UserProvider _userProvider = userProvider;
+    private readonly ILogger<AmmountQueryHandler> _logger = logger;
 
     public async Task<Result<decimal>> Handle(AmmountQuery request, CancellationToken cancellationToken)
     {
@@ -18,6 +21,7 @@ public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvid
 
         if (userIdResult.IsFailure)
         {
+            _logger.LogWarning("{Message}", userIdResult.Error.Description);
             return Result<decimal>.Failure(userIdResult.Error);
         }
 
@@ -28,6 +32,7 @@ public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvid
 
         if (user is null)
         {
+            _logger.LogWarning("{Message}", UserError.NotFound.Description);
             return Result<decimal>.Failure(UserError.NotFound);
         }
 
@@ -35,6 +40,7 @@ public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvid
 
         if (account is null)
         {
+            _logger.LogWarning("{Message}", AccountError.NotFound.Description);
             return Result<decimal>.Failure(AccountError.NotFound);
         }
 

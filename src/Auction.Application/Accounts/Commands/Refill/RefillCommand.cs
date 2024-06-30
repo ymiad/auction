@@ -1,6 +1,7 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Accounts.Commands.Refill;
 
@@ -10,10 +11,12 @@ public record RefillCommand : IRequest<Result>
     public decimal Amount { get; init; }
 }
 
-public class RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider) : IRequestHandler<RefillCommand, Result>
+public class RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider, ILogger<RefillCommandHandler> logger)
+    : IRequestHandler<RefillCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly UserProvider _userProvider = userProvider;
+    private readonly ILogger<RefillCommandHandler> _logger = logger;
 
     public async Task<Result> Handle(RefillCommand command, CancellationToken cancellationToken)
     {
@@ -21,6 +24,7 @@ public class RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvi
 
         if (userIdResult.IsFailure)
         {
+            _logger.LogWarning("{Message}", userIdResult.Error.Description);
             return Result.Failure(userIdResult.Error);
         }
 
@@ -32,6 +36,7 @@ public class RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvi
 
             if (user is null)
             {
+                _logger.LogWarning("{Message}", UserError.NotFound.Description);
                 return Result.Failure(UserError.NotFound);
             }
 
@@ -39,6 +44,7 @@ public class RefillCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvi
 
             if (account is null)
             {
+                _logger.LogWarning("{Message}", AccountError.NotFound.Description);
                 return Result.Failure(AccountError.NotFound);
             }
 

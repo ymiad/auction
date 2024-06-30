@@ -1,14 +1,17 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Lots.Queries.GetLots;
 
 public record GetCurrentLotsQuery : IRequest<Result<List<CurrentLotDto>>>;
 
-public class GetCurrentLotsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetCurrentLotsQuery, Result<List<CurrentLotDto>>>
+public class GetCurrentLotsQueryHandler(IUnitOfWork unitOfWork, ILogger<GetCurrentLotsQueryHandler> logger)
+    : IRequestHandler<GetCurrentLotsQuery, Result<List<CurrentLotDto>>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<GetCurrentLotsQueryHandler> _logger = logger;
 
     public async Task<Result<List<CurrentLotDto>>> Handle(GetCurrentLotsQuery request, CancellationToken cancellationToken)
     {
@@ -27,6 +30,7 @@ public class GetCurrentLotsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandle
                 var user = await connection.Repositories.UserRepository.GetById(lastBet.UserId);
                 if (user is null)
                 {
+                    _logger.LogWarning("{Message}", UserError.NotFound.Description);
                     return Result<List<CurrentLotDto>>.Failure(UserError.NotFound);
                 }
                 lastBetUsername = user.Username;

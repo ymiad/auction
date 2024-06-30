@@ -1,14 +1,17 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Users.Commands.RoleUpdate;
 
 public record UpdateRoleCommand(Guid UserId, Role Role) : IRequest<Result>;
 
-public class UpdateRoleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateRoleCommand, Result>
+public class UpdateRoleCommandHandler(IUnitOfWork unitOfWork, ILogger<UpdateRoleCommandHandler> logger)
+    : IRequestHandler<UpdateRoleCommand, Result>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<UpdateRoleCommandHandler> _logger = logger;
 
     public async Task<Result> Handle(UpdateRoleCommand command, CancellationToken cancellationToken)
     {
@@ -18,6 +21,7 @@ public class UpdateRoleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<
 
         if (user is null)
         {
+            _logger.LogWarning("{Message}", UserError.NotFound.Description);
             return Result.Failure(UserError.NotFound);
         }
 

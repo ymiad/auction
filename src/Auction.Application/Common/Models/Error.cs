@@ -14,6 +14,7 @@ public static class AuthError
 public static class UserError
 {
     public static readonly Error NotFound = new($"{nameof(UserError)}.{nameof(NotFound)}", "User not found");
+    public static readonly Error AlreadyExists = new($"{nameof(UserError)}.{nameof(AlreadyExists)}", "User already exists");
 }
 
 public static class AccountError

@@ -13,6 +13,14 @@ public class RegisterCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<Re
 
     public async Task<Result<Guid>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
+        using var connection = _unitOfWork.Create();
+
+        var existingUser = await connection.Repositories.UserRepository.GetBy((nameof(User.Username)), command.Username);
+        if (existingUser.Any())
+        {
+            return Result<Guid>.Failure(UserError.AlreadyExists);
+        }
+
         var (hashedPass, salt) = PasswordHasher.HashPassword(command.Password);
 
         var user = new User
@@ -28,7 +36,6 @@ public class RegisterCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<Re
             Ammount = 0
         };
 
-        using var connection = _unitOfWork.Create();
 
         var createdAccountId = await connection.Repositories.AccountRepository.Create(account);
 

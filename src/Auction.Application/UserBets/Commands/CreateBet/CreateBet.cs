@@ -2,6 +2,7 @@
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.UserBets.Commands.CreateBet;
 
@@ -12,11 +13,15 @@ public record CreateBetCommand : IRequest<Result<Guid>>
     public decimal Amount { get; set; }
 }
 
-public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unitOfWork)
-    : IRequestHandler<CreateBetCommand, Result<Guid>>
+public class CreateBetCommandHandler(
+    UserProvider userProvider,
+    IUnitOfWork unitOfWork,
+    ILogger<CreateBetCommandHandler> logger)
+        : IRequestHandler<CreateBetCommand, Result<Guid>>
 {
     private readonly UserProvider _userProvider = userProvider;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<CreateBetCommandHandler> _logger = logger;
 
     public async Task<Result<Guid>> Handle(CreateBetCommand command, CancellationToken cancellationToken)
     {
@@ -24,6 +29,7 @@ public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unit
 
         if (userIdResult.IsFailure)
         {
+            _logger.LogWarning("{Message}", AuthError.Unauthorized.Description);
             return Result<Guid>.Failure(AuthError.Unauthorized);
         }
 
@@ -39,6 +45,7 @@ public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unit
         var lot = await lotRepository.GetById(command.LotId);
         if (lot is null)
         {
+            _logger.LogWarning("{Message}", LotError.NotFound.Description);
             return Result<Guid>.Failure(LotError.NotFound);
         }
 
@@ -46,6 +53,7 @@ public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unit
 
         if (user is null)
         {
+            _logger.LogWarning("{Message}", UserError.NotFound.Description);
             return Result<Guid>.Failure(UserError.NotFound);
         }
 
@@ -53,6 +61,7 @@ public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unit
 
         if (account is null)
         {
+            _logger.LogWarning("{Message}", AccountError.NotFound.Description);
             return Result<Guid>.Failure(AccountError.NotFound);
         }
 
@@ -72,6 +81,7 @@ public class CreateBetCommandHandler(UserProvider userProvider, IUnitOfWork unit
             var returnResult = await ReturnAmmount(connection.Repositories, lastBet);
             if (returnResult.IsFailure)
             {
+                _logger.LogWarning("{Message}", returnResult.Error.Description);
                 return returnResult;
             }
         }

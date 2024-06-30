@@ -3,6 +3,7 @@ using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Application.Scheduling;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace Auction.Application.Lots.Commands.CreateLot;
@@ -17,12 +18,17 @@ public record CreateLotCommand : IRequest<Result<Guid>>
     public DateTime EndDate { get; init; }
 }
 
-public class CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider, IScheduler scheduler)
-    : IRequestHandler<CreateLotCommand, Result<Guid>>
+public class CreateLotCommandHandler(
+    IUnitOfWork unitOfWork,
+    UserProvider userProvider,
+    IScheduler scheduler,
+    ILogger<CreateLotCommandHandler> logger)
+        : IRequestHandler<CreateLotCommand, Result<Guid>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IScheduler _scheduler = scheduler;
     private readonly UserProvider _userProvider = userProvider;
+    private readonly ILogger<CreateLotCommandHandler> _logger = logger;
 
     public async Task<Result<Guid>> Handle(CreateLotCommand request, CancellationToken cancellationToken)
     {
@@ -30,6 +36,7 @@ public class CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userPr
 
         if (userIdResult.IsFailure)
         {
+            _logger.LogWarning("{Message}", userIdResult.Error.Description);
             return userIdResult;
         }
 

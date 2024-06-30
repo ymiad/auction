@@ -2,6 +2,7 @@
 using Auction.Application.Common.Models;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Users.Commands.Login;
 

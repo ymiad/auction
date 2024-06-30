@@ -3,8 +3,8 @@ using Auction.Infrastructure;
 using Auction.Infrastructure.Data.Migrations;
 using Auction.WebApi.Infrastructure;
 using FluentMigrator.Runner;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.Reflection;
 
 namespace Auction.WebApi;
@@ -28,7 +28,6 @@ public static class ConfigurationExtensions
         services.AddApplicationServices(_connectionString);
 
         services.AddHttpContextAccessor();
-        services.AddExceptionHandler<CustomExceptionHandler>();
         services.AddRazorPages();
 
         services.AddEndpointsApiExplorer();
