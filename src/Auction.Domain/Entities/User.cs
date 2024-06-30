@@ -8,6 +8,8 @@ public class User : BaseEntity
 
     public required string Password { get; set; }
 
+    public required string PasswordSalt { get; set; }
+
     public Role Role { get; set; }
 
     public Guid AccountId { get; set; }

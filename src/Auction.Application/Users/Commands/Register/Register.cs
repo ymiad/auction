@@ -1,12 +1,13 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Users.Commands.Register;
 
-public class RegisterCommand : IRequest<Guid>
+public record RegisterCommand : IRequest<Guid>
 {
-    public required string Username { get; set; }
-    public required string Password { get; set; }
+    public required string Username { get; init; }
+    public required string Password { get; init; }
 }
 
 public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
@@ -20,10 +21,13 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
 
     public async Task<Guid> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
+        var (hashedPass, salt) = PasswordHasher.HashPassword(command.Password);
+
         var user = new User
         {
             Username = command.Username,
-            Password = command.Password,
+            Password = hashedPass,
+            PasswordSalt = salt,
             Role = Role.User,
         };
 

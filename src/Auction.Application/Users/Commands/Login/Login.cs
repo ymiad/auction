@@ -1,17 +1,13 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
-using Microsoft.IdentityModel.JsonWebTokens;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace Auction.Application.Users.Commands.Login;
 
-public class LoginCommand : IRequest<string>
+public record LoginCommand : IRequest<string>
 {
-    public string Username { get; set; }
-    public string Password { get; set; }
+    public required string Username { get; init; }
+    public required string Password { get; init; }
 }
 
 public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
@@ -28,41 +24,21 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
 
         using var connection = _unitOfWork.Create();
 
-        var user = await connection.Repositories.UserRepository.GetByCredentials(command.Username, command.Password);
+        var user = (await connection.Repositories.UserRepository.GetBy(nameof(User.Username), command.Username)).SingleOrDefault();
 
         if (user is null)
         {
             return string.Empty;
         }
 
-        var token = GenerateJwtToken(user.Id, user.Role);
+        var isPasswordCorrect = PasswordHasher.IsPasswordCorrect(command.Password, user.Password, user.PasswordSalt);
 
-        return token;
-    }
-
-    public string GenerateJwtToken(Guid userId, Role role)
-    {
-        var tokenHandler = new JsonWebTokenHandler();
-        var key = Encoding.UTF8.GetBytes("secret_secret_secret_secret_secret_secret_secret_secret");
-
-
-        List<Claim> claims =
-        [
-            new Claim("user_id", userId.ToString()),
-            new Claim("user_role", ((int)role).ToString()),
-        ];
-
-        //ClaimsIdentity cl = new ClaimsIdentity()
-
-        var tokenDescriptor = new SecurityTokenDescriptor
+        if (!isPasswordCorrect)
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddDays(7),
-            //Expires = new TimeSpan(DateTime.Now.AddDays(90).Ticks - DateTime.Now.Ticks).TotalSeconds,
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-        };
+            return string.Empty;
+        }
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var token = JwtTokenHelper.GenerateJwtToken(user.Id, user.Role);
 
         return token;
     }

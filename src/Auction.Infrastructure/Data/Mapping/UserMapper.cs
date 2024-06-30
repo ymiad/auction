@@ -11,6 +11,7 @@ public class UserMapper : BaseMapper<User>
             { nameof(User.Id), "id" },
             { nameof(User.Username), "username" },
             { nameof(User.Password), "password" },
+            { nameof(User.PasswordSalt), "password_salt" },
             { nameof(User.AccountId), "account_id" },
             { nameof(User.Role), "role" },
             { nameof(User.Banned), "banned" },

@@ -19,6 +19,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             Id = reader.GetGuid(mapper.GetFieldName(nameof(User.Id))),
             Username = reader.GetString(mapper.GetFieldName(nameof(User.Username))),
             Password = reader.GetString(mapper.GetFieldName(nameof(User.Password))),
+            PasswordSalt = reader.GetString(mapper.GetFieldName(nameof(User.PasswordSalt))),
             AccountId = reader.GetGuid(mapper.GetFieldName(nameof(User.AccountId))),
             Role = (Role)reader.GetInt32(mapper.GetFieldName(nameof(User.Role))),
             Banned = reader.GetBoolean(mapper.GetFieldName(nameof(User.Banned))),

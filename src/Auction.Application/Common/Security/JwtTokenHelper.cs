@@ -1,10 +1,12 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
+﻿using Auction.Domain.Entities;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace Auction.Application.Common.Security;
 
-public static class TokenValidator
+public static class JwtTokenHelper
 {
     public async static Task<TokenValidationResult?> ValidateToken(string authHeader, string secret)
     {
@@ -33,5 +35,29 @@ public static class TokenValidator
         });
 
         return tokenValidationResult;
+    }
+
+    public static string GenerateJwtToken(Guid userId, Role role)
+    {
+        var tokenHandler = new JsonWebTokenHandler();
+        var key = Encoding.UTF8.GetBytes("secret_secret_secret_secret_secret_secret_secret_secret");
+
+
+        List<Claim> claims =
+        [
+            new Claim(JwtTokenConstants.UserId, userId.ToString()),
+            new Claim(JwtTokenConstants.Role, ((int)role).ToString()),
+        ];
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddDays(7),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+
+        return token;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Auction.Application.Common.Security;
+using Microsoft.AspNetCore.Http;
 
 namespace Auction.Application.Utils;
 
@@ -15,8 +16,8 @@ public class UserProvider
     {
         Guid result = Guid.Empty;
         object? userId = null;
-        var isSuccess = _httpContextAccessor?.HttpContext?.Items.TryGetValue("user_id", out userId) ?? false;
-        var currentUserId = isSuccess && userId is not null ? (Guid)userId : Guid.Empty;
+        var isSuccess = _httpContextAccessor?.HttpContext?.Items.TryGetValue(HttpContextConstants.UserId, out userId) ?? false;
+        result = isSuccess && userId is not null ? (Guid)userId : Guid.Empty;
 
         return result;
     }

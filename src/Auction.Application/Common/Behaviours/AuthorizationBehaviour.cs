@@ -39,11 +39,11 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
         try
         {
             var secret = "secret_secret_secret_secret_secret_secret_secret_secret";
-            var tokenValidationResult = await TokenValidator.ValidateToken(authHeader.ToString(), secret) ?? throw new UnauthorizedAccessException();
+            var tokenValidationResult = await JwtTokenHelper.ValidateToken(authHeader.ToString(), secret) ?? throw new UnauthorizedAccessException();
             if (tokenValidationResult.IsValid)
             {
-                Guid userId = new Guid(tokenValidationResult.Claims["user_id"]?.ToString() ?? string.Empty);
-                var roleStr = tokenValidationResult.Claims["user_role"]?.ToString();
+                Guid userId = new Guid(tokenValidationResult.Claims[JwtTokenConstants.UserId]?.ToString() ?? string.Empty);
+                var roleStr = tokenValidationResult.Claims[JwtTokenConstants.Role]?.ToString();
                 var parseRoleResult = int.TryParse(roleStr, out int role);
 
                 if (!parseRoleResult || !attr.Role.HasFlag((Role)role))
@@ -53,8 +53,8 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
                 using (var connection = _unitOfWork.Create())
                 {
                     var user = await connection.Repositories.UserRepository.GetById(userId);
-                    httpContext.Items["user_id"] = user.Id;
-                    httpContext.Items["user_role"] = (int)user.Role;
+                    httpContext.Items[HttpContextConstants.UserId] = user.Id;
+                    httpContext.Items[HttpContextConstants.Role] = (int)user.Role;
                 }
 
                 return await next();
