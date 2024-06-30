@@ -1,16 +1,19 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
+using Auction.Application.Common.Options;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Auction.Application.Users.Commands.Login;
 
 public record LoginCommand(string Username, string Password) : IRequest<Result<string>>;
 
-public class LoginCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<LoginCommand, Result<string>>
+public class LoginCommandHandler(IUnitOfWork unitOfWork, IOptions<JwtOptions> jwtOptions)
+    : IRequestHandler<LoginCommand, Result<string>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<Result<string>> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
@@ -31,7 +34,7 @@ public class LoginCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<Login
             return Result<string>.Failure(AuthError.InvalidCredentials);
         }
 
-        var token = JwtTokenHelper.GenerateJwtToken(user.Id, user.Role);
+        var token = JwtTokenHelper.GenerateJwtToken(user.Id, user.Role, _jwtOptions.Secret);
 
         return Result<string>.Success(token);
     }

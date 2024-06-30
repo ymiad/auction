@@ -1,10 +1,10 @@
 ﻿using Auction.Application;
+using Auction.Application.Common.Options;
 using Auction.Infrastructure;
 using Auction.Infrastructure.Data.Migrations;
 using Auction.WebApi.Infrastructure;
 using FluentMigrator.Runner;
 using Microsoft.OpenApi.Models;
-using Serilog;
 using System.Reflection;
 
 namespace Auction.WebApi;
@@ -17,6 +17,7 @@ public static class ConfigurationExtensions
     {
         _connectionString = configuration.GetConnectionString("DefaultConnectionString")!;
         CreateDatabase.CreateDataBaseIfNotExists(_connectionString);
+
         using (var serviceProvider = AddAuctionData(_connectionString))
         using (var scope = serviceProvider.CreateScope())
         {
@@ -25,7 +26,7 @@ public static class ConfigurationExtensions
 
         services.AddInfrastructureServices(_connectionString);
 
-        services.AddApplicationServices(_connectionString);
+        services.AddApplicationServices(configuration, _connectionString);
 
         services.AddHttpContextAccessor();
         services.AddRazorPages();

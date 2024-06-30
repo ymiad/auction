@@ -1,9 +1,11 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Exceptions;
+using Auction.Application.Common.Options;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 
 namespace Auction.Application.Common.Behaviours;
@@ -11,12 +13,14 @@ namespace Auction.Application.Common.Behaviours;
 public class AuthorizationBehaviour<TRequest, TResponse>(
     IHttpContextAccessor httpContextAccessor,
     IUnitOfWork unitOfWork,
-    ILogger<AuthorizationBehaviour<TRequest, TResponse>> logger)
+    ILogger<AuthorizationBehaviour<TRequest, TResponse>> logger,
+    IOptions<JwtOptions> jwtOptions)
     : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly ILogger<AuthorizationBehaviour<TRequest, TResponse>> _logger = logger;
+    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
@@ -34,8 +38,7 @@ public class AuthorizationBehaviour<TRequest, TResponse>(
             throw new UnauthorizedAccessException();
         }
 
-        var secret = "secret_secret_secret_secret_secret_secret_secret_secret";
-        var tokenValidationResult = await JwtTokenHelper.ValidateToken(authHeader.ToString(), secret);
+        var tokenValidationResult = await JwtTokenHelper.ValidateToken(authHeader.ToString(), _jwtOptions.Secret);
 
         if (tokenValidationResult is null || !tokenValidationResult.IsValid)
         {

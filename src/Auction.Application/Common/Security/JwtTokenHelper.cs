@@ -37,10 +37,10 @@ public static class JwtTokenHelper
         return tokenValidationResult;
     }
 
-    public static string GenerateJwtToken(Guid userId, Role role)
+    public static string GenerateJwtToken(Guid userId, Role role, string secret)
     {
         var tokenHandler = new JsonWebTokenHandler();
-        var key = Encoding.UTF8.GetBytes("secret_secret_secret_secret_secret_secret_secret_secret");
+        var key = Encoding.UTF8.GetBytes(secret);
 
 
         List<Claim> claims =
