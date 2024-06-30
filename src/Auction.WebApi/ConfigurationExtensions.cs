@@ -3,6 +3,7 @@ using Auction.Infrastructure;
 using Auction.Infrastructure.Data.Migrations;
 using Auction.WebApi.Infrastructure;
 using FluentMigrator.Runner;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
@@ -15,10 +16,11 @@ public static class ConfigurationExtensions
     public static IServiceCollection AddWebServices(this IServiceCollection services, IConfiguration configuration)
     {
         _connectionString = configuration.GetConnectionString("DefaultConnectionString")!;
+        CreateDatabase.CreateDataBaseIfNotExists(_connectionString);
         using (var serviceProvider = AddAuctionData(_connectionString))
         using (var scope = serviceProvider.CreateScope())
         {
-            UpdateDatabase(scope.ServiceProvider);
+            UpdateDatabase(scope.ServiceProvider, _connectionString);
         }
 
         services.AddInfrastructureServices(_connectionString);
@@ -83,7 +85,7 @@ public static class ConfigurationExtensions
             .BuildServiceProvider();
     }
 
-    private static void UpdateDatabase(IServiceProvider serviceProvider)
+    private static void UpdateDatabase(IServiceProvider serviceProvider, string connectionString)
     {
         var runner = serviceProvider.GetRequiredService<IMigrationRunner>();
 
