@@ -1,15 +1,13 @@
 ﻿using Auction.Domain.Entities;
-using Auction.Infrastructure.Data.Constants;
 
 namespace Auction.Infrastructure.Data.Mapping;
 
-public class LotMapping : IMapping<Lot>
+public class LotMapper : BaseMapper<Lot>
 {
-    public Dictionary<string, string> GetMapping()
-    {
-        return new Dictionary<string, string>
+    public LotMapper() : base(
+        tableName: "lots",
+        mapping: new Dictionary<string, string>
         {
-            { EntityConstants.TableName, "lots" },
             { nameof(Lot.Id), "id" },
             { nameof(Lot.Name), "name" },
             { nameof(Lot.Description), "description" },
@@ -19,6 +17,6 @@ public class LotMapping : IMapping<Lot>
             { nameof(Lot.Archived), "archived" },
             { nameof(Lot.OwnerId), "owner_id" },
             { nameof(Lot.PublisherId), "publisher_id" },
-        };
-    }
+        }
+    ) { }
 }

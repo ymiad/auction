@@ -12,14 +12,14 @@ namespace Auction.Infrastructure.Data.Repositories
 
         protected override UserBet Read(NpgsqlDataReader reader)
         {
-            var mapping = Mapper.GetMap<UserBet>();
+            var mapper = Mapper.GetMapper<UserBet>();
 
             var result = new UserBet
             {
-                Id = reader.GetGuid(mapping[nameof(UserBet.Id)]),
-                LotId = reader.GetGuid(mapping[nameof(UserBet.LotId)]),
-                UserId = reader.GetGuid(mapping[nameof(UserBet.UserId)]),
-                Ammount = reader.GetDecimal(mapping[nameof(UserBet.Ammount)]),
+                Id = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.Id))),
+                LotId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.LotId))),
+                UserId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.UserId))),
+                Ammount = reader.GetDecimal(mapper.GetFieldName(nameof(UserBet.Ammount))),
             };
 
             return result;

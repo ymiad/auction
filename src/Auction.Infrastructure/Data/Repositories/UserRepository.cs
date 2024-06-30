@@ -12,16 +12,16 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
     protected override User Read(NpgsqlDataReader reader)
     {
-        var mapping = Mapper.GetMap<User>();
+        var mapper = Mapper.GetMapper<User>();
 
         var result = new User
         {
-            Id = reader.GetGuid(mapping[nameof(User.Id)]),
-            Username = reader.GetString(mapping[nameof(User.Username)]),
-            Password = reader.GetString(mapping[nameof(User.Password)]),
-            AccountId = reader.GetGuid(mapping[nameof(User.AccountId)]),
-            Role = (Role)reader.GetInt32(mapping[nameof(User.Role)]),
-            Banned = reader.GetBoolean(mapping[nameof(User.Banned)]),
+            Id = reader.GetGuid(mapper.GetFieldName(nameof(User.Id))),
+            Username = reader.GetString(mapper.GetFieldName(nameof(User.Username))),
+            Password = reader.GetString(mapper.GetFieldName(nameof(User.Password))),
+            AccountId = reader.GetGuid(mapper.GetFieldName(nameof(User.AccountId))),
+            Role = (Role)reader.GetInt32(mapper.GetFieldName(nameof(User.Role))),
+            Banned = reader.GetBoolean(mapper.GetFieldName(nameof(User.Banned))),
         };
 
         return result;
@@ -31,75 +31,22 @@ public class UserRepository : BaseRepository<User>, IUserRepository
     {
         var selectCommand = _connection.CreateCommand();
         selectCommand.Transaction = _transaction;
-        var mapping = Mapper.GetMap<User>();
 
-        string usernameFieldName = Mapper.GetTableFieldName(mapping, nameof(User.Username));
-        string passwordFieldName = Mapper.GetTableFieldName(mapping, nameof(User.Password));
+        var mapper = Mapper.GetMapper<User>();
 
-        var query = $"{GetAllQuery()} WHERE {usernameFieldName} = @{usernameFieldName} AND {passwordFieldName} = @{passwordFieldName}";
+        string usernameField = mapper.GetFieldName(nameof(User.Username));
+        string passField = mapper.GetFieldName(nameof(User.Password));
 
+        var query = $"{GetAllQuery()} WHERE {usernameField} = @{usernameField} AND {passField} = @{passField}";
 
-        selectCommand.CommandText = query;
-
-        selectCommand.Parameters.AddWithValue($"@{usernameFieldName}", username);
-        selectCommand.Parameters.AddWithValue($"@{passwordFieldName}", password);
-
-        using var reader = await selectCommand.ExecuteReaderAsync();
-
-        User? result = null;
-
-        while (reader.Read())
-        {
-            result = Read(reader);
-        }
-
-        return result;
-    }
-
-    public async Task<User> GetByUsername(string username)
-    {
-        var selectCommand = _connection.CreateCommand();
-        selectCommand.Transaction = _transaction;
-        var mapping = Mapper.GetMap<User>();
-
-        string usernameFieldName = Mapper.GetTableFieldName(mapping, nameof(User.Username));
-
-        var query = $"{GetAllQuery()} WHERE {usernameFieldName} = @{usernameFieldName}";
 
         selectCommand.CommandText = query;
 
-        selectCommand.Parameters.AddWithValue($"@{usernameFieldName}", username);
+        selectCommand.Parameters.AddWithValue($"@{usernameField}", username);
+        selectCommand.Parameters.AddWithValue($"@{passField}", password);
 
-        using var reader = await selectCommand.ExecuteReaderAsync();
+        var result = await ReadData(selectCommand);
 
-        var result = Read(reader);
-
-        return result;
+        return result.SingleOrDefault();
     }
-
-    //public async Task<User> GetByEmail(string email)
-    //{
-    //    var selectCommand = _connection.CreateCommand();
-    //    selectCommand.Transaction = _transaction;
-    //    var mapping = Mapper.GetMap<User>();
-
-    //    string emailFieldName = Mapper.GetTableFieldName(mapping, nameof(User.Email));
-
-    //    var query = $"{GetAllQuery()} WHERE {emailFieldName} = ${emailFieldName}";
-
-    //    selectCommand.CommandText = query;
-
-    //    selectCommand.Parameters.AddWithValue($"{emailFieldName}", email);
-
-    //    using var reader = await selectCommand.ExecuteReaderAsync();
-
-    //    User result = null;
-
-    //    while (reader.Read())
-    //    {
-    //        result = Read(reader);
-    //    }
-
-    //    return result;
-    //}
 }

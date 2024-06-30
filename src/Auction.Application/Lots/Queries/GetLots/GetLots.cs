@@ -4,7 +4,6 @@ using AutoMapper;
 
 namespace Auction.Application.Lots.Queries.GetLots;
 
-[Authorize]
 public record GetLotsQuery : IRequest<List<LotDto>>;
 
 public class GetLotsQueryHandler : IRequestHandler<GetLotsQuery, List<LotDto>>

@@ -14,12 +14,12 @@ namespace Auction.Infrastructure.Data.Repositories
 
         protected override Account Read(NpgsqlDataReader reader)
         {
-            var mapping = Mapper.GetMap<Account>();
+            var mapper = Mapper.GetMapper<Account>();
 
             var result = new Account
             {
-                Id = reader.GetGuid(mapping[nameof(Account.Id)]),
-                Ammount = reader.GetDecimal(mapping[nameof(Account.Ammount)]),
+                Id = reader.GetGuid(mapper.GetFieldName(nameof(Account.Id))),
+                Ammount = reader.GetDecimal(mapper.GetFieldName(nameof(Account.Ammount))),
             };
 
             return result;

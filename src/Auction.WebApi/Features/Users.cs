@@ -1,7 +1,4 @@
-﻿using Auction.Application.Lots.Commands.CreateLot;
-using Auction.Application.Lots.Commands.DeleteLot;
-using Auction.Application.Lots.Queries.GetLots;
-using Auction.Application.Users.Commands.BanUser;
+﻿using Auction.Application.Users.Commands.BanUser;
 using Auction.Application.Users.Commands.GiveModeratorPermissions;
 using Auction.Application.Users.Commands.Login;
 using Auction.Application.Users.Commands.Register;

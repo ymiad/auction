@@ -1,6 +1,5 @@
 ﻿using Auction.Application.Common.Abstractions.Repository;
 using Auction.Domain.Entities;
-using Auction.Infrastructure.Data.Mapping;
 using Auction.Infrastructure.Data.Utils;
 using Npgsql;
 using System.Data;
@@ -15,14 +14,13 @@ namespace Auction.Infrastructure.Data.Repositories
         {
             var selectCommand = _connection.CreateCommand();
             selectCommand.Transaction = _transaction;
-            var lotMapping = new LotMapping();
-            string tableName = lotMapping.GetTableName();
-            Dictionary<string, string> fieldsMapping = lotMapping.GetFields();
 
-            var tradingStarDateField = lotMapping.GetTableFieldName(nameof(Lot.TradingStartDate));
-            var archivedField = lotMapping.GetTableFieldName(nameof(Lot.Archived));
-            var tradingEndDateField = lotMapping.GetTableFieldName(nameof(Lot.TradingEndDate));
-            var ownerField = lotMapping.GetTableFieldName(nameof(Lot.OwnerId));
+            var mapper = Mapper.GetMapper<Lot>();
+
+            var tradingStarDateField = mapper.GetFieldName(nameof(Lot.TradingStartDate));
+            var archivedField = mapper.GetFieldName(nameof(Lot.Archived));
+            var tradingEndDateField = mapper.GetFieldName(nameof(Lot.TradingEndDate));
+            var ownerField = mapper.GetFieldName(nameof(Lot.OwnerId));
 
             var query = $"{GetAllQuery()}" +
                 $" WHERE {tradingStarDateField} <= @{tradingStarDateField}" +
@@ -51,19 +49,19 @@ namespace Auction.Infrastructure.Data.Repositories
 
         protected override Lot Read(NpgsqlDataReader reader)
         {
-            var mapping = Mapper.GetMap<Lot>();
+            var mapper = Mapper.GetMapper<Lot>();
 
             var result = new Lot
             {
-                Id = reader.GetGuid(mapping[nameof(Lot.Id)]),
-                Name = reader.GetString(mapping[nameof(Lot.Name)]),
-                Description = reader.GetString(mapping[nameof(Lot.Description)]),
-                StartPrice = reader.GetDecimal(mapping[nameof(Lot.StartPrice)]),
-                TradingStartDate = reader.GetDateTime(mapping[nameof(Lot.TradingStartDate)]),
-                TradingEndDate = reader.GetDateTime(mapping[nameof(Lot.TradingEndDate)]),
-                Archived = reader.GetBoolean(mapping[nameof(Lot.Archived)]),
-                OwnerId = reader.GetGuid(mapping[nameof(Lot.OwnerId)]),
-                PublisherId = reader.GetGuid(mapping[nameof(Lot.PublisherId)]),
+                Id = reader.GetGuid(mapper.GetFieldName(nameof(Lot.Id))),
+                Name = reader.GetString(mapper.GetFieldName(nameof(Lot.Name))),
+                Description = reader.GetString(mapper.GetFieldName(nameof(Lot.Description))),
+                StartPrice = reader.GetDecimal(mapper.GetFieldName(nameof(Lot.StartPrice))),
+                TradingStartDate = reader.GetDateTime(mapper.GetFieldName(nameof(Lot.TradingStartDate))),
+                TradingEndDate = reader.GetDateTime(mapper.GetFieldName(nameof(Lot.TradingEndDate))),
+                Archived = reader.GetBoolean(mapper.GetFieldName(nameof(Lot.Archived))),
+                OwnerId = reader.GetGuid(mapper.GetFieldName(nameof(Lot.OwnerId))),
+                PublisherId = reader.GetGuid(mapper.GetFieldName(nameof(Lot.PublisherId))),
             };
 
             return result;

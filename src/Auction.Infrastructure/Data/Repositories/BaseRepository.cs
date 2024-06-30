@@ -1,6 +1,5 @@
 ﻿using Auction.Application.Common.Abstractions.Repository;
 using Auction.Domain.Common;
-using Auction.Infrastructure.Data.Constants;
 using Auction.Infrastructure.Data.Utils;
 using Npgsql;
 
@@ -17,22 +16,13 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         _transaction = transaction;
     }
 
-    public virtual async Task<TEntity> GetById(Guid id)
+    public virtual async Task<TEntity?> GetById(Guid id)
     {
-        var selectCommand = _connection.CreateCommand();
+        NpgsqlCommand selectCommand = _connection.CreateCommand();
         selectCommand.Transaction = _transaction;
-        var mapping = Mapper.GetMap<TEntity>();
 
-        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
-
-        mapping.Remove(EntityConstants.TableName);
-
-        var keysArr = mapping.Keys.ToArray();
-        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
-
-        var tableFieldsStr = string.Join(", ", fieldsArr);
-
-        string idFieldName = Mapper.GetTableFieldName(mapping, nameof(BaseEntity.Id));
+        var mapper = Mapper.GetMapper<TEntity>();
+        var idFieldName = mapper.GetFieldName(nameof(BaseEntity.Id));
 
         var query = $"{GetAllQuery()} WHERE {idFieldName} = @{idFieldName}";
 
@@ -40,39 +30,28 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
 
         selectCommand.Parameters.AddWithValue($"@{idFieldName}", id);
 
-        using var reader = await selectCommand.ExecuteReaderAsync();
+        var result = await ReadData(selectCommand);
 
-        TEntity result = null;
-
-        while (reader.Read())
-        {
-            result = Read(reader);
-        }
-
-
-        return result;
+        return result.SingleOrDefault();
     }
 
     public virtual async Task<IList<TEntity>> GetAll()
     {
         var selectCommand = _connection.CreateCommand();
         selectCommand.Transaction = _transaction;
-        var mapping = Mapper.GetMap<TEntity>();
 
-        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
+        var mapper = Mapper.GetMapper<TEntity>();
+        var tableName = mapper.GetTableName();
+        var fields = mapper.GetMapping().Values;
 
-        mapping.Remove(EntityConstants.TableName);
-
-        var keysArr = mapping.Keys.ToArray();
-        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
-
-        var tableFieldsStr = string.Join(", ", fieldsArr);
+        var tableFieldsStr = string.Join(", ", fields);
 
         var query = $"SELECT {tableFieldsStr} FROM {tableName}";
 
         selectCommand.CommandText = query;
 
         using var reader = await selectCommand.ExecuteReaderAsync();
+
         List<TEntity> result = [];
         while (reader.Read())
         {
@@ -83,39 +62,19 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         return result;
     }
 
-    protected abstract TEntity Read(NpgsqlDataReader reader);
-
-    public virtual async Task<IList<TEntity>> GetBy(string fieldName, object value)
+    public virtual async Task<IList<TEntity>> GetBy(string entityPropName, object value)
     {
-        var selectCommand = _connection.CreateCommand();
+        NpgsqlCommand selectCommand = _connection.CreateCommand();
         selectCommand.Transaction = _transaction;
-        var mapping = Mapper.GetMap<TEntity>();
 
-        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
-
-        mapping.Remove(EntityConstants.TableName);
-
-        var keysArr = mapping.Keys.ToArray();
-        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
-
-        var tableFieldsStr = string.Join(", ", fieldsArr);
-
-        string queryFieldName = Mapper.GetTableFieldName(mapping, fieldName);
+        var mapper = Mapper.GetMapper<TEntity>();
+        var queryFieldName = mapper.GetFieldName(entityPropName);
 
         var query = $"{GetAllQuery()} WHERE {queryFieldName} = @{queryFieldName}";
-
         selectCommand.CommandText = query;
-
         selectCommand.Parameters.AddWithValue($"@{queryFieldName}", value);
 
-        using var reader = await selectCommand.ExecuteReaderAsync();
-
-        List<TEntity> result = [];
-
-        while (reader.Read())
-        {
-            result.Add(Read(reader));
-        }
+        var result = await ReadData(selectCommand);
 
         return result;
     }
@@ -125,14 +84,13 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         var insertCommand = _connection.CreateCommand();
         insertCommand.Transaction = _transaction;
 
-        var mapping = Mapper.GetMap<TEntity>();
+        var mapper = Mapper.GetMapper<TEntity>();
+        var tableName = mapper.GetTableName();
+        var mapping = mapper.GetMapping();
+        var fields = mapping.Values;
 
-        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
-
-        var fields = mapping.Where(x => x.Key != EntityConstants.TableName);
-
-        var tableFieldsStr = string.Join(", ", fields.Select(x => x.Value));
-        var valuesParamsStr = string.Join(", ", fields.Select(x => $"@{x.Value}"));
+        var tableFieldsStr = string.Join(", ", fields);
+        var valuesParamsStr = string.Join(", ", fields.Select(x => $"@{x}"));
 
         var query = $"INSERT INTO {tableName} ({tableFieldsStr}) VALUES ({valuesParamsStr})";
 
@@ -141,19 +99,12 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         var entityType = entity.GetType();
         Guid entityId = Guid.NewGuid();
 
-        foreach (var field in fields)
+        foreach (var field in mapping)
         {
-            var prop = entityType.GetProperty(field.Key);
-            if (prop != null)
-            {
-                var propValue = prop.GetValue(entity, null);
-                if (prop.PropertyType.IsEnum && propValue != null)
-                {
-                    propValue = (int)propValue;
-                }
+            var entityPropName = field.Key;
+            var propValue = entityPropName == nameof(BaseEntity.Id) ? entityId : GetPropValue(entity, entityPropName);
 
-                insertCommand.Parameters.AddWithValue($"@{field.Value}", field.Key == nameof(BaseEntity.Id) ? entityId : propValue);
-            }
+            insertCommand.Parameters.AddWithValue($"@{field.Value}", propValue);
         }
 
         await insertCommand.ExecuteNonQueryAsync();
@@ -167,14 +118,12 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         deleteCommand.Transaction = _transaction;
         var mapper = Mapper.GetMapper<TEntity>();
         var tableName = mapper.GetTableName();
-        var idFieldName = mapper.GetTableFieldName(nameof(BaseEntity.Id));
+        var idFieldName = mapper.GetFieldName(nameof(BaseEntity.Id));
 
         var query = $"DELETE FROM {tableName} WHERE {idFieldName} = @{idFieldName}";
 
         deleteCommand.CommandText = query;
-
         deleteCommand.Parameters.AddWithValue($"@{idFieldName}", id);
-
         await deleteCommand.ExecuteNonQueryAsync();
     }
 
@@ -183,15 +132,12 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         var updateCommand = _connection.CreateCommand();
         updateCommand.Transaction = _transaction;
 
-        var mapping = Mapper.GetMap<TEntity>();
-        mapping.TryGetValue(EntityConstants.TableName , out var tableName);
-
-        var fields = mapping.Where(x => x.Key != EntityConstants.TableName);
-
-        string idFieldName = Mapper.GetTableFieldName(mapping, nameof(BaseEntity.Id));
+        var mapper = Mapper.GetMapper<TEntity>();
+        var tableName = mapper.GetTableName();
+        var fields = mapper.GetMapping();
+        var idFieldName = mapper.GetFieldName(nameof(BaseEntity.Id));
 
         var setFields = string.Join(", ", fields
-            .Where(x => x.Key != nameof(BaseEntity.Id))
             .Select(x => $"{x.Value}=@{x.Value}"));
 
         var query = $"UPDATE {tableName} SET {setFields} WHERE {idFieldName} = @{idFieldName}";
@@ -202,36 +148,51 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
 
         foreach (var field in fields)
         {
-            var prop = entityType.GetProperty(field.Key);
-            if (prop != null)
-            {
-                var propValue = prop.GetValue(entity, null);
-                if (prop.PropertyType.IsEnum && propValue != null)
-                {
-                    propValue = (int)propValue;
-                }
-                updateCommand.Parameters.AddWithValue($"@{field.Value}", propValue);
-            }
+            var propName = field.Key;
+            var fieldName = field.Value;
+            var propValue = GetPropValue(entity, propName);
+            
+            updateCommand.Parameters.AddWithValue($"@{fieldName}", propValue);
         }
 
         await updateCommand.ExecuteNonQueryAsync();
     }
 
+    protected abstract TEntity Read(NpgsqlDataReader reader);
+
+    protected object GetPropValue(TEntity entity, string propName)
+    {
+        object? propValue = null;
+        var prop = typeof(TEntity).GetProperty(propName);
+        if (prop is not null)
+        {
+            propValue = prop.GetValue(entity, null);
+            if (prop.PropertyType.IsEnum && propValue != null)
+            {
+                propValue = (int)propValue;
+            }
+        }
+
+        return propValue ?? DBNull.Value;
+    }
+
     protected string GetAllQuery()
     {
-        var mapping = Mapper.GetMap<TEntity>();
-
-        mapping.TryGetValue(EntityConstants.TableName, out var tableName);
-
-        mapping.Remove(EntityConstants.TableName);
-
-        var keysArr = mapping.Keys.ToArray();
-        var fieldsArr = keysArr.Select(x => mapping[x]).ToArray();
-
-        var tableFieldsStr = string.Join(", ", fieldsArr);
-
+        var mapper = Mapper.GetMapper<TEntity>();
+        var tableName = mapper.GetTableName();
+        var tableFieldsStr = string.Join(", ", mapper.GetMapping().Values);
         var query = $"SELECT {tableFieldsStr} FROM {tableName}";
-
         return query;
+    }
+
+    protected async Task<List<TEntity>> ReadData(NpgsqlCommand command)
+    {
+        using var reader = await command.ExecuteReaderAsync();
+        List<TEntity> result = new(Convert.ToInt32(reader.Rows));
+        while (reader.Read())
+        {
+            result.Add(Read(reader));
+        }
+        return result;
     }
 }
