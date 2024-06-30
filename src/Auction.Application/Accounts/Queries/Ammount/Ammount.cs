@@ -1,6 +1,5 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
-using Auction.Application.Utils;
 
 namespace Auction.Application.Accounts.Queries.Ammount;
 

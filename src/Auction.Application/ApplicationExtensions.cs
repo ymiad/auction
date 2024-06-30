@@ -1,6 +1,6 @@
-﻿using Auction.Application.Common.Behaviours;
+﻿using Auction.Application.Common;
+using Auction.Application.Common.Behaviours;
 using Auction.Application.Scheduling;
-using Auction.Application.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 

@@ -1,7 +1,7 @@
 ﻿using Auction.Application.Common.Security;
 using Microsoft.AspNetCore.Http;
 
-namespace Auction.Application.Utils;
+namespace Auction.Application.Common;
 
 public class UserProvider
 {
