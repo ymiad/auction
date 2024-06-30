@@ -1,27 +1,26 @@
 ﻿using Quartz;
 using Quartz.Spi;
 
-namespace Auction.Application.Scheduling
+namespace Auction.Application.Scheduling;
+
+internal class JobFactory : IJobFactory
 {
-    internal class JobFactory : IJobFactory
+    private readonly IServiceProvider _serviceProvider;
+
+    public JobFactory(IServiceProvider serviceProvider)
     {
-        private readonly IServiceProvider _serviceProvider;
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
 
-        public JobFactory(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        }
+    public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
+    {
+        var jobType = bundle.JobDetail.JobType;
+        var job = new ScopedLifestyleJobDecorator(_serviceProvider, jobType);
+        return job;
+    }
 
-        public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
-        {
-            var jobType = bundle.JobDetail.JobType;
-            var job = new ScopedLifestyleJobDecorator(_serviceProvider, jobType);
-            return job;
-        }
-
-        public void ReturnJob(IJob job)
-        {
-            (job as IDisposable)?.Dispose();
-        }
+    public void ReturnJob(IJob job)
+    {
+        (job as IDisposable)?.Dispose();
     }
 }

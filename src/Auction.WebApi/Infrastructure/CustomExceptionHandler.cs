@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CleanArchitecture.Web.Infrastructure;
+namespace Auction.WebApi.Infrastructure;
 
 public class CustomExceptionHandler : IExceptionHandler
 {

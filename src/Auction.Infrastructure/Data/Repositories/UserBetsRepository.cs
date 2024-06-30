@@ -4,25 +4,24 @@ using Auction.Infrastructure.Data.Utils;
 using Npgsql;
 using System.Data;
 
-namespace Auction.Infrastructure.Data.Repositories
+namespace Auction.Infrastructure.Data.Repositories;
+
+public class UserBetsRepository : BaseRepository<UserBet>, IUserBetRepository
 {
-    public class UserBetsRepository : BaseRepository<UserBet>, IUserBetRepository
+    public UserBetsRepository(NpgsqlConnection connection, NpgsqlTransaction transaction) : base(connection, transaction) { }
+
+    protected override UserBet Read(NpgsqlDataReader reader)
     {
-        public UserBetsRepository(NpgsqlConnection connection, NpgsqlTransaction transaction) : base(connection, transaction) { }
+        var mapper = Mapper.GetMapper<UserBet>();
 
-        protected override UserBet Read(NpgsqlDataReader reader)
+        var result = new UserBet
         {
-            var mapper = Mapper.GetMapper<UserBet>();
+            Id = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.Id))),
+            LotId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.LotId))),
+            UserId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.UserId))),
+            Ammount = reader.GetDecimal(mapper.GetFieldName(nameof(UserBet.Ammount))),
+        };
 
-            var result = new UserBet
-            {
-                Id = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.Id))),
-                LotId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.LotId))),
-                UserId = reader.GetGuid(mapper.GetFieldName(nameof(UserBet.UserId))),
-                Ammount = reader.GetDecimal(mapper.GetFieldName(nameof(UserBet.Ammount))),
-            };
-
-            return result;
-        }
+        return result;
     }
 }

@@ -1,7 +1,6 @@
 using Auction.WebApi;
 using Auction.WebApi.Features;
 using Auction.WebApi.Infrastructure;
-using CleanArchitecture.Web.Infrastructure;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateSlimBuilder(args);

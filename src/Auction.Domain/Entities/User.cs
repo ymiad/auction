@@ -1,4 +1,6 @@
-﻿namespace Auction.Domain.Entities;
+﻿using Auction.Domain.Common;
+
+namespace Auction.Domain.Entities;
 
 public class User : BaseEntity
 {

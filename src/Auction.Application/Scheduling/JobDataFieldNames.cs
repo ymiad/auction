@@ -1,10 +1,9 @@
-﻿namespace Auction.Application.Scheduling
+﻿namespace Auction.Application.Scheduling;
+
+public static class JobDataFieldNames
 {
-    public static class JobDataFieldNames
+    public static class Lot
     {
-        public static class Lot
-        {
-            public const string Id = "lotId";
-        }
+        public const string Id = "lotId";
     }
 }
