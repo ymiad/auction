@@ -45,6 +45,23 @@ public static class SchedulingExtensions
         await scheduler.Start(cancellationToken);
     }
 
+    public static async Task UnscheduleTradingJob(this IScheduler scheduler, Guid lotId, CancellationToken cancellationToken = default)
+    {
+        var jobKey = new JobKey(nameof(TriggerLotTradingEndJob));
+        var isJobActive = await scheduler.CheckExists(jobKey, cancellationToken);
+        if (isJobActive)
+        {
+            IReadOnlyCollection<ITrigger> jobTriggers = await scheduler.GetTriggersOfJob(jobKey, cancellationToken);
+
+            IReadOnlyCollection<TriggerKey> cancellableTriggers = jobTriggers
+                .Where(x => x.JobDataMap[JobDataFieldNames.Lot.Id].ToString() == lotId.ToString())
+                .Select(x => x.Key)
+                .ToList();
+
+            await scheduler.UnscheduleJobs(cancellableTriggers, cancellationToken);
+        }
+    }
+
     public static async Task ActivateTradingEndJob(this IScheduler scheduler, Guid lotId, DateTime tradingEndDate, CancellationToken cancellationToken = default)
     {
         var jobKey = new JobKey(nameof(TriggerLotTradingEndJob));
