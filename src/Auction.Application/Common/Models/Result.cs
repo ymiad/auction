@@ -3,7 +3,6 @@ namespace Auction.Application.Common.Models;
 
 public class Result<TValue>
 {
-    public readonly TValue? Value;
 
     private Result(bool isSuccess, Error error)
     {
@@ -25,6 +24,7 @@ public class Result<TValue>
         Error = Error.None;
     }
 
+    public TValue? Value { get; }
     public bool IsSuccess { get; }
 
     public bool IsFailure => !IsSuccess;
