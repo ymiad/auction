@@ -1,24 +1,16 @@
-﻿using Auction.Application.Common;
-using Auction.Application.Common.Abstractions.UnitOfWork;
+﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
-using AutoMapper;
 
 namespace Auction.Application.Lots.Queries.GetLots;
 
-public record GetCurrentLotsQuery : IRequest<List<CurrentLotDto>>;
+public record GetCurrentLotsQuery : IRequest<Result<List<CurrentLotDto>>>;
 
-public class GetCurrentLotsQueryHandler : IRequestHandler<GetCurrentLotsQuery, List<CurrentLotDto>>
+public class GetCurrentLotsQueryHandler(IUnitOfWork unitOfWork) : IRequestHandler<GetCurrentLotsQuery, Result<List<CurrentLotDto>>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-    public GetCurrentLotsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
-    public async Task<List<CurrentLotDto>> Handle(GetCurrentLotsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<CurrentLotDto>>> Handle(GetCurrentLotsQuery request, CancellationToken cancellationToken)
     {
         using var connection = _unitOfWork.Create();
         var lots = await connection.Repositories.LotRepository.GetCurrentLots();
@@ -33,6 +25,10 @@ public class GetCurrentLotsQueryHandler : IRequestHandler<GetCurrentLotsQuery, L
             if (lastBet is not null)
             {
                 var user = await connection.Repositories.UserRepository.GetById(lastBet.UserId);
+                if (user is null)
+                {
+                    return Result<List<CurrentLotDto>>.Failure(UserError.NotFound);
+                }
                 lastBetUsername = user.Username;
                 lastBetAmmount = lastBet.Ammount;
             }
@@ -49,6 +45,6 @@ public class GetCurrentLotsQueryHandler : IRequestHandler<GetCurrentLotsQuery, L
             });
         }
 
-        return result;
+        return Result<List<CurrentLotDto>>.Success(result);
     }
 }

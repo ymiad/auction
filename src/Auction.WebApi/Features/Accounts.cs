@@ -1,4 +1,5 @@
 ﻿using Auction.Application.Accounts.Commands.Refill;
+using Auction.Application.Common.Models;
 using Auction.Application.Accounts.Queries.Ammount;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public static class Accounts
             .WithTags(nameof(Accounts))
             .WithSummary("Refill account")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
 
         group.MapGet(
             "/ammount",
@@ -28,7 +29,7 @@ public static class Accounts
             .WithTags(nameof(Accounts))
             .WithSummary("Account amount")
             .WithOpenApi()
-            .Produces<decimal>();
+            .Produces<Result<decimal>>();
 
         return builder;
     }

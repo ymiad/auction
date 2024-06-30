@@ -1,4 +1,5 @@
-﻿using Auction.Application.Users.Commands.BanUser;
+﻿using Auction.Application.Common.Models;
+using Auction.Application.Users.Commands.BanUser;
 using Auction.Application.Users.Commands.GiveModeratorPermissions;
 using Auction.Application.Users.Commands.Login;
 using Auction.Application.Users.Commands.Register;
@@ -12,7 +13,6 @@ namespace Auction.WebApi.Features;
 
 public static class Users
 {
-    //[Authorize]
     public static WebApplication UsersFeature(this WebApplication builder)
     {
         var group = builder
@@ -26,7 +26,7 @@ public static class Users
             .WithTags(nameof(Users))
             .WithSummary("Register")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
 
         group.MapPost(
             "/login",
@@ -36,7 +36,7 @@ public static class Users
             .WithTags(nameof(Users))
             .WithSummary("Login")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
 
         group.MapPut(
             "/{id:guid}",
@@ -46,7 +46,7 @@ public static class Users
             .WithTags(nameof(Lots))
             .WithSummary("Ban user")
             .WithOpenApi()
-            .Produces<bool>();
+            .Produces<Result>();
 
         group.MapPut(
             "/giveModeratorPermissions/{id:guid}",
@@ -56,7 +56,7 @@ public static class Users
             .WithTags(nameof(Users))
             .WithSummary("Give moderator permissions")
             .WithOpenApi()
-            .Produces<bool>();
+            .Produces<Result>();
 
         group.MapPut(
             "/changeRole",
@@ -66,7 +66,7 @@ public static class Users
             .WithTags(nameof(Users))
             .WithSummary("Only for testing: Update role")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
 
         group.MapGet(
             "/getAll",
@@ -76,7 +76,7 @@ public static class Users
             .WithTags(nameof(Users))
             .WithSummary("Get all users")
             .WithOpenApi()
-            .Produces<List<User>>();
+            .Produces<Result<List<User>>>();
 
         return builder;
     }

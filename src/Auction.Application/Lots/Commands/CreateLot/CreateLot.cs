@@ -1,5 +1,6 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Application.Scheduling;
 using Auction.Domain.Entities;
 using Quartz;
@@ -7,7 +8,7 @@ using Quartz;
 namespace Auction.Application.Lots.Commands.CreateLot;
 
 [Authorize(Role.User)]
-public record CreateLotCommand : IRequest<Guid>
+public record CreateLotCommand : IRequest<Result<Guid>>
 {
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -16,22 +17,24 @@ public record CreateLotCommand : IRequest<Guid>
     public DateTime EndDate { get; init; }
 }
 
-public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
+public class CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider, IScheduler scheduler)
+    : IRequestHandler<CreateLotCommand, Result<Guid>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IScheduler _scheduler;
-    private readonly UserProvider _userProvider;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IScheduler _scheduler = scheduler;
+    private readonly UserProvider _userProvider = userProvider;
 
-    public CreateLotCommandHandler(IUnitOfWork unitOfWork, UserProvider userProvider, IScheduler scheduler)
+    public async Task<Result<Guid>> Handle(CreateLotCommand request, CancellationToken cancellationToken)
     {
-        _unitOfWork = unitOfWork;
-        _userProvider = userProvider;
-        _scheduler = scheduler;
-    }
+        var userIdResult = _userProvider.GetCurrentUserId();
 
-    public async Task<Guid> Handle(CreateLotCommand request, CancellationToken cancellationToken)
-    {
-        var currentUserId = _userProvider.GetCurrentUserId();
+        if (userIdResult.IsFailure)
+        {
+            return userIdResult;
+        }
+
+        var userId = userIdResult.Value;
+
         var entity = new Lot
         {
             Name = request.Name,
@@ -39,18 +42,18 @@ public class CreateLotCommandHandler : IRequestHandler<CreateLotCommand, Guid>
             StartPrice = request.StartPrice,
             TradingStartDate = request.StartDate,
             TradingEndDate = request.EndDate,
-            PublisherId = currentUserId,
-            OwnerId = currentUserId,
+            PublisherId = userId,
+            OwnerId = userId,
         };
 
         using var connection = _unitOfWork.Create();
 
         var lotId = await connection.Repositories.LotRepository.Create(entity);
 
-        connection.SaveChanges();
+        await connection.SaveChangesAsync();
 
-        await _scheduler.ActivateTradingEndJob(lotId, request.EndDate);
+        await _scheduler.ActivateTradingEndJob(lotId, request.EndDate, cancellationToken);
 
-        return lotId;
+        return Result<Guid>.Success(lotId);
     }
 }

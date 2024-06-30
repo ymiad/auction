@@ -6,16 +6,10 @@ namespace Auction.Application.Lots.Queries.GetLots;
 
 public record GetLotsQuery : IRequest<List<LotDto>>;
 
-public class GetLotsQueryHandler : IRequestHandler<GetLotsQuery, List<LotDto>>
+public class GetLotsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper) : IRequestHandler<GetLotsQuery, List<LotDto>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public GetLotsQueryHandler(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<List<LotDto>> Handle(GetLotsQuery request, CancellationToken cancellationToken)
     {

@@ -3,34 +3,26 @@ using Auction.Application.Common.Exceptions;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
 using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.Tokens;
-using System.Data;
-using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 
 namespace Auction.Application.Common.Behaviours;
 
-public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+public class AuthorizationBehaviour<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork)
+    : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IUnitOfWork _unitOfWork;
-
-    public AuthorizationBehaviour(IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork)
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         var attr = request.GetType().GetCustomAttribute<AuthorizeAttribute>();
-        if (attr == null)
+        if (attr is null)
         {
             return await next();
         }
 
         HttpContext? httpContext = _httpContextAccessor.HttpContext ?? throw new UnauthorizedAccessException();
-        var authHeader = httpContext.Request.Headers["Authorization"];
+        var authHeader = httpContext.Request.Headers[HttpContextConstants.AuthorizationHeader];
         if (string.IsNullOrWhiteSpace(authHeader))
         {
             throw new UnauthorizedAccessException();
@@ -42,7 +34,7 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
             var tokenValidationResult = await JwtTokenHelper.ValidateToken(authHeader.ToString(), secret) ?? throw new UnauthorizedAccessException();
             if (tokenValidationResult.IsValid)
             {
-                Guid userId = new Guid(tokenValidationResult.Claims[JwtTokenConstants.UserId]?.ToString() ?? string.Empty);
+                Guid userId = new(tokenValidationResult.Claims[JwtTokenConstants.UserId]?.ToString() ?? string.Empty);
                 var roleStr = tokenValidationResult.Claims[JwtTokenConstants.Role]?.ToString();
                 var parseRoleResult = int.TryParse(roleStr, out int role);
 
@@ -52,7 +44,7 @@ public class AuthorizationBehaviour<TRequest, TResponse> : IPipelineBehavior<TRe
                 }
                 using (var connection = _unitOfWork.Create())
                 {
-                    var user = await connection.Repositories.UserRepository.GetById(userId);
+                    var user = await connection.Repositories.UserRepository.GetById(userId) ?? throw new UnauthorizedAccessException();
                     httpContext.Items[HttpContextConstants.UserId] = user.Id;
                     httpContext.Items[HttpContextConstants.Role] = (int)user.Role;
                 }

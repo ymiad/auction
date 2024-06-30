@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
-using System.Text;
 
 namespace Auction.Application.Common.Security
 {
@@ -14,7 +13,7 @@ namespace Auction.Application.Common.Security
                 password: password!,
                 salt: salt,
                 prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
+                iterationCount: 10000,
                 numBytesRequested: 256 / 8));
 
             return (hashed, Convert.ToBase64String(salt));

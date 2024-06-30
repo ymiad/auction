@@ -1,35 +1,43 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 
 namespace Auction.Application.Accounts.Queries.Ammount;
 
 [Authorize]
-public record AmmountQuery : IRequest<decimal>;
+public record AmmountQuery : IRequest<Result<decimal>>;
 
-public class AmmountQueryHandler : IRequestHandler<AmmountQuery, decimal>
+public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider) : IRequestHandler<AmmountQuery, Result<decimal>>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly UserProvider _userProvider;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly UserProvider _userProvider = userProvider;
 
-    public AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider)
+    public async Task<Result<decimal>> Handle(AmmountQuery request, CancellationToken cancellationToken)
     {
-        _unitOfWork = unitOfWork;
-        _userProvider = userProvider;
-    }
+        var userIdResult = _userProvider.GetCurrentUserId();
 
-    public async Task<decimal> Handle(AmmountQuery request, CancellationToken cancellationToken)
-    {
-        var userId = _userProvider.GetCurrentUserId();
-
-        decimal amount = 0;
-
-        using (var connection = _unitOfWork.Create())
+        if (userIdResult.IsFailure)
         {
-            var user = await connection.Repositories.UserRepository.GetById(userId);
-            var account = await connection.Repositories.AccountRepository.GetById(user.AccountId);
-            amount = account.Ammount;
+            return Result<decimal>.Failure(userIdResult.Error);
         }
 
-        return amount;
+        var userId = userIdResult.Value;
+
+        using var connection = _unitOfWork.Create();
+        var user = await connection.Repositories.UserRepository.GetById(userId);
+
+        if (user is null)
+        {
+            return Result<decimal>.Failure(UserError.NotFound);
+        }
+
+        var account = await connection.Repositories.AccountRepository.GetById(user.AccountId);
+
+        if (account is null)
+        {
+            return Result<decimal>.Failure(AccountError.NotFound);
+        }
+
+        return Result<decimal>.Success(account.Ammount);
     }
 }

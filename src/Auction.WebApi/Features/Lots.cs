@@ -1,4 +1,5 @@
-﻿using Auction.Application.Lots.Commands.CreateLot;
+﻿using Auction.Application.Common.Models;
+using Auction.Application.Lots.Commands.CreateLot;
 using Auction.Application.Lots.Commands.DeleteLot;
 using Auction.Application.Lots.Queries.GetLots;
 using MediatR;
@@ -21,7 +22,7 @@ public static class Lots
             .WithTags(nameof(Lots))
             .WithSummary("Create lot")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
         
         group.MapGet(
             "/getAll",
@@ -31,7 +32,7 @@ public static class Lots
             .WithTags(nameof(Lots))
             .WithSummary("Get all lots")
             .WithOpenApi()
-            .Produces<List<LotDto>>();
+            .Produces<Result<List<LotDto>>>();
 
         group.MapGet(
             "/getCurrentLots",
@@ -41,7 +42,7 @@ public static class Lots
             .WithTags(nameof(Lots))
             .WithSummary("Get current available lots")
             .WithOpenApi()
-            .Produces<List<CurrentLotDto>>();
+            .Produces<Result<List<CurrentLotDto>>>();
 
         group.MapDelete(
             "/{id:guid}",
@@ -51,7 +52,7 @@ public static class Lots
             .WithTags(nameof(Lots))
             .WithSummary("Delete lot")
             .WithOpenApi()
-            .Produces<bool>();
+            .Produces<Result>();
 
         return builder;
     }

@@ -1,25 +1,17 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Users.Commands.Register;
 
-public record RegisterCommand : IRequest<Guid>
+public record RegisterCommand(string Username, string Password) : IRequest<Result<Guid>>;
+
+public class RegisterCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<RegisterCommand, Result<Guid>>
 {
-    public required string Username { get; init; }
-    public required string Password { get; init; }
-}
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
-{
-    private readonly IUnitOfWork _unitOfWork;
-
-    public RegisterCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<Guid> Handle(RegisterCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RegisterCommand command, CancellationToken cancellationToken)
     {
         var (hashedPass, salt) = PasswordHasher.HashPassword(command.Password);
 
@@ -36,17 +28,15 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
             Ammount = 0
         };
 
-        Guid resultUserId = Guid.Empty;
+        using var connection = _unitOfWork.Create();
 
-        using (var connection = _unitOfWork.Create())
-        {
-            var accountId = await connection.Repositories.AccountRepository.Create(account);
+        var createdAccountId = await connection.Repositories.AccountRepository.Create(account);
 
-            user.AccountId = accountId;
-            resultUserId = await connection.Repositories.UserRepository.Create(user);
-            connection.SaveChanges();
-        }
+        user.AccountId = createdAccountId;
 
-        return resultUserId;
+        var createdUserId = await connection.Repositories.UserRepository.Create(user);
+        await connection.SaveChangesAsync();
+
+        return Result<Guid>.Success(createdUserId);
     }
 }

@@ -20,8 +20,4 @@
     <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.10.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UserBets\Queries\" />
-  </ItemGroup>
-
 </Project>

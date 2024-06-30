@@ -20,6 +20,22 @@ public class UnitOfWorkAdapter : IUnitOfWorkAdapter
         Repositories = new UnitOfWorkRepository(_connection, _transaction);
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        if (_transaction is not null)
+        {
+            await _transaction.DisposeAsync();
+        }
+
+        if (_connection is not null)
+        {
+            await _connection.CloseAsync();
+            await _connection.DisposeAsync();
+        }
+
+        Repositories = null!;
+    }
+
     public void Dispose()
     {
         _transaction?.Dispose();
@@ -30,11 +46,11 @@ public class UnitOfWorkAdapter : IUnitOfWorkAdapter
             _connection.Dispose();
         }
 
-        Repositories = null;
+        Repositories = null!;
     }
 
-    public void SaveChanges()
+    public async Task SaveChangesAsync()
     {
-        _transaction.Commit();
+        await _transaction.CommitAsync();
     }
 }

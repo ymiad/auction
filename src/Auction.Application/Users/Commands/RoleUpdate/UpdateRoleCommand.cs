@@ -1,24 +1,16 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Users.Commands.RoleUpdate;
 
-public record UpdateRoleCommand : IRequest<bool>
+public record UpdateRoleCommand(Guid UserId, Role Role) : IRequest<Result>;
+
+public class UpdateRoleCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<UpdateRoleCommand, Result>
 {
-    public Guid UserId { get; init; }
-    public Role Role { get; init; }
-}
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, bool>
-{
-    private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateRoleCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<bool> Handle(UpdateRoleCommand command, CancellationToken cancellationToken)
+    public async Task<Result> Handle(UpdateRoleCommand command, CancellationToken cancellationToken)
     {
         using var connection = _unitOfWork.Create();
 
@@ -26,15 +18,15 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, bool>
 
         if (user is null)
         {
-            return false;
+            return Result.Failure(UserError.NotFound);
         }
 
         user.Role = command.Role;
 
         await connection.Repositories.UserRepository.Update(user);
 
-        connection.SaveChanges();
+        await connection.SaveChangesAsync();
 
-        return true;
+        return Result.Success();
     }
 }

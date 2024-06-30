@@ -1,4 +1,5 @@
-﻿using Auction.Application.Common.Security;
+﻿using Auction.Application.Common.Models;
+using Auction.Application.Common.Security;
 using Microsoft.AspNetCore.Http;
 
 namespace Auction.Application.Common;
@@ -12,13 +13,16 @@ public class UserProvider
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Guid GetCurrentUserId()
+    public Result<Guid> GetCurrentUserId()
     {
-        Guid result = Guid.Empty;
         object? userId = null;
         var isSuccess = _httpContextAccessor?.HttpContext?.Items.TryGetValue(HttpContextConstants.UserId, out userId) ?? false;
-        result = isSuccess && userId is not null ? (Guid)userId : Guid.Empty;
 
-        return result;
+        if (isSuccess && userId is not null)
+        {
+            return Result<Guid>.Success((Guid)userId);
+        }
+
+        return Result<Guid>.Failure(AuthError.Unauthorized);
     }
 }

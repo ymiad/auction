@@ -30,6 +30,6 @@ internal class TriggerLotTradingEndJob : IJob
         }
 
         await connection.Repositories.LotRepository.Update(lot);
-        connection.SaveChanges();
+        await connection.SaveChangesAsync();
     }
 }

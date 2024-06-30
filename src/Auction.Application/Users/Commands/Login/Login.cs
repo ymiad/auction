@@ -1,25 +1,17 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Application.Common.Security;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Users.Commands.Login;
 
-public record LoginCommand : IRequest<string>
+public record LoginCommand(string Username, string Password) : IRequest<Result<string>>;
+
+public class LoginCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<LoginCommand, Result<string>>
 {
-    public required string Username { get; init; }
-    public required string Password { get; init; }
-}
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
-{
-    private readonly IUnitOfWork _unitOfWork;
-
-    public LoginCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<string> Handle(LoginCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(LoginCommand command, CancellationToken cancellationToken)
     {
 
         using var connection = _unitOfWork.Create();
@@ -28,18 +20,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, string>
 
         if (user is null)
         {
-            return string.Empty;
+            return Result<string>.Failure(AuthError.InvalidCredentials);
         }
 
         var isPasswordCorrect = PasswordHasher.IsPasswordCorrect(command.Password, user.Password, user.PasswordSalt);
 
         if (!isPasswordCorrect)
         {
-            return string.Empty;
+            return Result<string>.Failure(AuthError.InvalidCredentials);
         }
 
         var token = JwtTokenHelper.GenerateJwtToken(user.Id, user.Role);
 
-        return token;
+        return Result<string>.Success(token);
     }
 }

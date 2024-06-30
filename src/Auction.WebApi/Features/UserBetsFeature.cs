@@ -1,4 +1,5 @@
-﻿using Auction.Application.UserBets.Commands.CreateBet;
+﻿using Auction.Application.Common.Models;
+using Auction.Application.UserBets.Commands.CreateBet;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,7 @@ public static class UserBets
             .WithTags(nameof(UserBets))
             .WithSummary("Place bet")
             .WithOpenApi()
-            .Produces<Guid>();
+            .Produces<Result<Guid>>();
 
         return builder;
     }

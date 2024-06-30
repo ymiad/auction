@@ -1,30 +1,32 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
 
 namespace Auction.Application.Users.Commands.BanUser;
 
 [Authorize(Role.Moderator | Role.Admin)]
 
-public record BanUserCommand(Guid UserId) : IRequest<bool>;
+public record BanUserCommand(Guid UserId) : IRequest<Result>;
 
-public class BanUserCommandHandler : IRequestHandler<BanUserCommand, bool>
+public class BanUserCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<BanUserCommand, Result>
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-    public BanUserCommandHandler(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
-
-    public async Task<bool> Handle(BanUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result> Handle(BanUserCommand command, CancellationToken cancellationToken)
     {
         using var connection = _unitOfWork.Create();
         var user = await connection.Repositories.UserRepository.GetById(command.UserId);
-        user.Banned = true;
-        await connection.Repositories.UserRepository.Update(user);
-        connection.SaveChanges();
+        if (user is null)
+        {
+            return Result.Failure(UserError.NotFound);
+        }
 
-        return true;
+        user.Banned = true;
+
+        await connection.Repositories.UserRepository.Update(user);
+        await connection.SaveChangesAsync();
+
+        return Result.Success();
     }
 }
