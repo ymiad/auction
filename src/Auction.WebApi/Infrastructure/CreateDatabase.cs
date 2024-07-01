@@ -8,19 +8,24 @@ public static class CreateDatabase
     {
         var connStrParams = connectionString.Split(';');
         string pgConnStr = string.Empty;
+        string dbName = string.Empty;
         foreach (var param in connStrParams)
         {
             var check = param.StartsWith("Database=");
+            if (check)
+            {
+                dbName = param.Split('=')[1];
+            }
             pgConnStr += check ? string.Empty : $"{param};";
         }
 
-        string sql = "select 1 from postgres.pg_catalog.pg_database where datname = 'auction'";
-        string sql2 = "CREATE DATABASE \"auction\"";
+        string dbExistsSql = $"select 1 from postgres.pg_catalog.pg_database where datname = '{dbName}'";
+        string createDbSql = $"CREATE DATABASE \"{dbName}\"";
         using NpgsqlConnection cnn = new NpgsqlConnection(pgConnStr);
         cnn.Open();
 
         var selectCommand = cnn.CreateCommand();
-        selectCommand.CommandText = sql;
+        selectCommand.CommandText = dbExistsSql;
         var reader = selectCommand.ExecuteReader();
         while (reader.Read())
         {
@@ -30,7 +35,7 @@ public static class CreateDatabase
         cnn.Open();
 
         var command = cnn.CreateCommand();
-        command.CommandText = sql2;
+        command.CommandText = createDbSql;
         command.ExecuteNonQuery();
         cnn.Close();
     }

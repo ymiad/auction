@@ -15,7 +15,7 @@ public static class Lots
             .MapGroup($"/api/{nameof(Lots)}");            
 
         group.MapPost(
-            "/create",
+            "/",
             async ([FromBody] CreateLotCommand request, IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(request, cancellationToken))
             )
@@ -25,22 +25,22 @@ public static class Lots
             .Produces<Result<Guid>>();
         
         group.MapGet(
-            "/getAll",
+            "/",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new GetLotsQuery(), cancellationToken))
             )
             .WithTags(nameof(Lots))
-            .WithSummary("Get all lots")
+            .WithSummary("Get all lots (for testing)")
             .WithOpenApi()
             .Produces<Result<List<LotDto>>>();
 
         group.MapGet(
-            "/getCurrentLots",
+            "/trading",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new GetCurrentLotsQuery(), cancellationToken))
             )
             .WithTags(nameof(Lots))
-            .WithSummary("Get current available lots")
+            .WithSummary("Get trading lots")
             .WithOpenApi()
             .Produces<Result<List<CurrentLotDto>>>();
 

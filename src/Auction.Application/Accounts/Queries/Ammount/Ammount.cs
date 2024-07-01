@@ -1,11 +1,12 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
+using Auction.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Accounts.Queries.Ammount;
 
-[Authorize]
+[Authorize(Role.User)]
 public record AmmountQuery : IRequest<Result<decimal>>;
 
 public class AmmountQueryHandler(IUnitOfWork unitOfWork, UserProvider userProvider, ILogger<AmmountQueryHandler> logger)

@@ -1,10 +1,12 @@
-﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+﻿using Auction.Application.Common;
+using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Users.Commands.RoleUpdate;
 
+[Authorize(Role.Admin)]
 public record UpdateRoleCommand(Guid UserId, Role Role) : IRequest<Result>;
 
 public class UpdateRoleCommandHandler(IUnitOfWork unitOfWork, ILogger<UpdateRoleCommandHandler> logger)

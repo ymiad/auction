@@ -23,7 +23,7 @@ public static class Accounts
             .Produces<Result<Guid>>();
 
         group.MapGet(
-            "/ammount",
+            "/",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             await mediator.Send(new AmmountQuery(), cancellationToken))
             .WithTags(nameof(Accounts))

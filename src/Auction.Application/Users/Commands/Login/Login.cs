@@ -27,6 +27,11 @@ public class LoginCommandHandler(IUnitOfWork unitOfWork, IOptions<JwtOptions> jw
             return Result<string>.Failure(AuthError.InvalidCredentials);
         }
 
+        if (user.Banned)
+        {
+            return Result<string>.Failure(UserError.Banned);
+        }
+
         var isPasswordCorrect = PasswordHasher.IsPasswordCorrect(command.Password, user.Password, user.PasswordSalt);
 
         if (!isPasswordCorrect)

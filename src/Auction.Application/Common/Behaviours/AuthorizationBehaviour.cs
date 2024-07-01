@@ -58,6 +58,12 @@ public class AuthorizationBehaviour<TRequest, TResponse>(
         using (var connection = _unitOfWork.Create())
         {
             var user = await connection.Repositories.UserRepository.GetById(userId) ?? throw new UnauthorizedAccessException();
+
+            if (user.Banned)
+            {
+                throw new ForbiddenAccessException();
+            }
+
             httpContext.Items[HttpContextConstants.UserId] = user.Id;
             httpContext.Items[HttpContextConstants.Role] = (int)user.Role;
         }

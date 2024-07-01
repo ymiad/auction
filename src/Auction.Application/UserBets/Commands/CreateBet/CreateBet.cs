@@ -57,6 +57,12 @@ public class CreateBetCommandHandler(
             return Result<Guid>.Failure(UserError.NotFound);
         }
 
+        if (lot.PublisherId == user.Id)
+        {
+            _logger.LogWarning("{Message}", UserBetError.SameUser.Description);
+            return Result<Guid>.Failure(UserBetError.SameUser);
+        }
+
         var account = await accountRepository.GetById(user.AccountId);
 
         if (account is null)
@@ -136,7 +142,7 @@ public class CreateBetCommandHandler(
             return Result<Guid>.Failure(UserBetError.AmmountLessThanPrice);
         }
 
-        if (lot.TradingStartDate <= DateTime.Now)
+        if (lot.TradingStartDate > DateTime.Now)
         {
             return Result<Guid>.Failure(LotError.TradingNotStarted);
         }

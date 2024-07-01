@@ -15,6 +15,7 @@ public static class UserError
 {
     public static readonly Error NotFound = new($"{nameof(UserError)}.{nameof(NotFound)}", "User not found");
     public static readonly Error AlreadyExists = new($"{nameof(UserError)}.{nameof(AlreadyExists)}", "User already exists");
+    public static readonly Error Banned = new($"{nameof(UserError)}.{nameof(Banned)}", "User is banned");
 }
 
 public static class AccountError
@@ -25,6 +26,7 @@ public static class AccountError
 public static class UserBetError
 {
     public static readonly Error AmmountLessThanPrice = new($"{nameof(UserBetError)}.{nameof(AmmountLessThanPrice)}", "User bet amount less than lot start price or current bet ammount");
+    public static readonly Error SameUser = new($"{nameof(UserBetError)}.{nameof(SameUser)}", "Can not place bet for own lot");
 }
 
 public static class LotError

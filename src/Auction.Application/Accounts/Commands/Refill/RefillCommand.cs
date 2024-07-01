@@ -1,11 +1,12 @@
 ﻿using Auction.Application.Common;
 using Auction.Application.Common.Abstractions.UnitOfWork;
 using Auction.Application.Common.Models;
+using Auction.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Auction.Application.Accounts.Commands.Refill;
 
-[Authorize]
+[Authorize(Role.User)]
 public record RefillCommand : IRequest<Result>
 {
     public decimal Amount { get; init; }

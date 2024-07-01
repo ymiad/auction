@@ -39,42 +39,62 @@ public static class Users
             .Produces<Result<Guid>>();
 
         group.MapPut(
-            "/{id:guid}",
+            "/ban/{id:guid}",
             async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new BanUserCommand(id), cancellationToken))
             )
-            .WithTags(nameof(Lots))
+            .WithTags(nameof(Users))
             .WithSummary("Ban user")
             .WithOpenApi()
             .Produces<Result>();
 
         group.MapPut(
-            "/giveModeratorPermissions/{id:guid}",
-            async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
-            (await mediator.Send(new GiveModeratorPermissionsCommand(id), cancellationToken))
+            "/setModeratorRole",
+            async ([FromBody] SetModeratorRole request, IMediator mediator, CancellationToken cancellationToken) =>
+            (await mediator.Send(request, cancellationToken))
             )
             .WithTags(nameof(Users))
-            .WithSummary("Give moderator permissions")
+            .WithSummary("Make as moderator")
             .WithOpenApi()
             .Produces<Result>();
 
         group.MapPut(
-            "/changeRole",
-            async ([FromBody] UpdateRoleCommand request, IMediator mediator, CancellationToken cancellationToken) =>
-            (await mediator.Send(request, cancellationToken))
+            "/giveAdmin/{id:guid}",
+            async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
+            (await mediator.Send(new UpdateRoleCommand(id, Role.Admin), cancellationToken))
             )
             .WithTags(nameof(Users))
-            .WithSummary("Only for testing: Update role")
+            .WithSummary("Set Admin role (for testing, auth not required)")
             .WithOpenApi()
             .Produces<Result<Guid>>();
 
+        group.MapPut(
+            "/giveModer/{id:guid}",
+            async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
+            (await mediator.Send(new UpdateRoleCommand(id, Role.Moderator), cancellationToken))
+            )
+            .WithTags(nameof(Users))
+            .WithSummary("Set Moder role(for testing, auth not required)")
+            .WithOpenApi()
+            .Produces<Result<Guid>>();
+
+        group.MapPut(
+           "/giveUser/{id:guid}",
+           async ([FromRoute] Guid id, IMediator mediator, CancellationToken cancellationToken) =>
+           (await mediator.Send(new UpdateRoleCommand(id, Role.User), cancellationToken))
+           )
+           .WithTags(nameof(Users))
+           .WithSummary("Set User role (for testing, auth not required)")
+           .WithOpenApi()
+           .Produces<Result<Guid>>();
+
         group.MapGet(
-            "/getAll",
+            "/",
             async (IMediator mediator, CancellationToken cancellationToken) =>
             (await mediator.Send(new GetUsersQuery(), cancellationToken))
             )
             .WithTags(nameof(Users))
-            .WithSummary("Get all users")
+            .WithSummary("Get all users (for testing, auth not required)")
             .WithOpenApi()
             .Produces<Result<List<User>>>();
 

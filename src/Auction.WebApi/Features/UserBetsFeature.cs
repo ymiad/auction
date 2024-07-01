@@ -13,7 +13,7 @@ public static class UserBets
             .MapGroup($"/api/{nameof(UserBets)}");
 
         group.MapPost(
-            "/createBet",
+            "/",
             async ([FromBody] CreateBetCommand request, IMediator mediator, CancellationToken cancellationToken) =>
             await mediator.Send(request, cancellationToken))
             .WithTags(nameof(UserBets))
