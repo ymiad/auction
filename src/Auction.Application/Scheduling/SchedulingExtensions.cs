@@ -20,9 +20,9 @@ public static class SchedulingExtensions
             var quartzConfig = new QuartzConfig();
             quartzConfig.SetConnectionString(connectionString);
             var quartzConfigNameValue = quartzConfig.ToNameValueCollection();
-            ISchedulerFactory schedulerFactory = new StdSchedulerFactory(quartzConfigNameValue);
+            var schedulerFactory = new StdSchedulerFactory(quartzConfigNameValue);
             var scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
-            scheduler.JobFactory = serviceProvider.GetService<IJobFactory>();
+            scheduler.JobFactory = serviceProvider?.GetService<IJobFactory>() ?? new JobFactory(serviceProvider!);
             return scheduler;
         });
 

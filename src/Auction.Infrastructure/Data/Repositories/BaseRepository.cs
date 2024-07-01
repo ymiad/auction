@@ -5,16 +5,11 @@ using Npgsql;
 
 namespace Auction.Infrastructure.Data.Repositories;
 
-public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where TEntity : BaseEntity
+public abstract class BaseRepository<TEntity>(NpgsqlConnection connection, NpgsqlTransaction transaction)
+    : IBaseRepository<TEntity> where TEntity : BaseEntity
 {
-    protected readonly NpgsqlConnection _connection;
-    protected readonly NpgsqlTransaction _transaction;
-
-    public BaseRepository(NpgsqlConnection connection, NpgsqlTransaction transaction)
-    {
-        _connection = connection;
-        _transaction = transaction;
-    }
+    protected readonly NpgsqlConnection _connection = connection;
+    protected readonly NpgsqlTransaction _transaction = transaction;
 
     public virtual async Task<TEntity?> GetById(Guid id)
     {
@@ -22,6 +17,7 @@ public abstract class BaseRepository<TEntity> : IBaseRepository<TEntity> where T
         selectCommand.Transaction = _transaction;
 
         var mapper = Mapper.GetMapper<TEntity>();
+
         var idFieldName = mapper.GetFieldName(nameof(BaseEntity.Id));
 
         var query = $"{GetAllQuery()} WHERE {idFieldName} = @{idFieldName}";

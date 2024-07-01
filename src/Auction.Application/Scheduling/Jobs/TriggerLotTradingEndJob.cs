@@ -1,23 +1,34 @@
 ﻿using Auction.Application.Common.Abstractions.UnitOfWork;
+using Auction.Application.Common.Models;
 using Auction.Domain.Entities;
+using Microsoft.Extensions.Logging;
 using Quartz;
 
 namespace Auction.Application.Scheduling.Jobs;
 
-internal class TriggerLotTradingEndJob : IJob
+internal class TriggerLotTradingEndJob(IUnitOfWork unitOfWork, ILogger<TriggerLotTradingEndJob> logger) : IJob
 {
-    private readonly IUnitOfWork _unitOfWork;
-
-    public TriggerLotTradingEndJob(IUnitOfWork unitOfWork)
-    {
-        _unitOfWork = unitOfWork;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly ILogger<TriggerLotTradingEndJob> _logger = logger;
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var lotId = new Guid(context.Trigger.JobDataMap.Get(JobDataFieldNames.Lot.Id).ToString());
+        var lotId = context.Trigger.JobDataMap.Get(JobDataFieldNames.Lot.Id)?.ToString();
+        if (lotId is null)
+        {
+            return;
+        }
+
+        var lotIdParsed = new Guid(lotId);
         using var connection = _unitOfWork.Create();
-        var lot = await connection.Repositories.LotRepository.GetById(lotId);
+        var lot = await connection.Repositories.LotRepository.GetById(lotIdParsed);
+
+        if (lot is null)
+        {
+            _logger.LogWarning("{Message}", LotError.NotFound);
+            return;
+        }
+
         var userBets = await connection.Repositories.UserBetRepository.GetBy(nameof(UserBet.LotId), lot.Id);
         if (userBets.Any())
         {
